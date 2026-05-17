@@ -10,12 +10,12 @@ import { Upload, X, ImagePlus, MapPin, Tag } from "lucide-react";
 import Image from "next/image";
 
 const CATEGORIES = [
-  { value: "artisan", label: "🎨 حرف", color: "bg-terracotta" },
-  { value: "music", label: "🎵 موسيقى", color: "bg-ocean" },
-  { value: "surf", label: "🏄 تزلج", color: "bg-blue-500" },
-  { value: "food", label: "🍜 طعام", color: "bg-saffron" },
-  { value: "culture", label: "🏛️ ثقافة", color: "bg-purple-500" },
-  { value: "other", label: "💫 أخرى", color: "bg-gray-500" },
+  { value: "artisan", label: "🎨 Crafts", color: "bg-terracotta" },
+  { value: "music", label: "🎵 Music", color: "bg-ocean" },
+  { value: "surf", label: "🏄 Surf", color: "bg-blue-500" },
+  { value: "food", label: "🍜 Food", color: "bg-saffron" },
+  { value: "culture", label: "🏛️ Culture", color: "bg-purple-500" },
+  { value: "other", label: "💫 Other", color: "bg-gray-500" },
 ];
 
 export default function NewPostPage() {
@@ -37,14 +37,14 @@ export default function NewPostPage() {
   // Only artisans can post
   if (!isSignedIn || !profile || profile.role !== "artisan") {
     return (
-      <div className="flex-1 flex items-center justify-center p-8" dir="rtl">
+      <div className="flex-1 flex items-center justify-center p-8" dir="ltr">
         <div className="text-center">
           <div className="text-[48px] mb-4">🔒</div>
-          <h2 className="text-text-primary text-[20px] font-bold mb-2 font-arabic">
-            هذه الميزة متاحة للحرفيين فقط
+          <h2 className="text-text-primary text-[20px] font-bold mb-2">
+            This feature is available for Artisans only
           </h2>
           <p className="text-text-secondary text-[15px]">
-            سجل كحرفي لمشاركة أعمالك مع المجتمع
+            Register as an artisan to share your work with the community
           </p>
         </div>
       </div>
@@ -122,38 +122,38 @@ export default function NewPostPage() {
   };
 
   return (
-    <div className="flex-1 w-full max-w-[700px] mx-auto px-4 py-8" dir="rtl">
+    <div className="flex-1 w-full max-w-[700px] mx-auto px-4 py-8" dir="ltr">
       <h1 className="text-text-primary text-[24px] font-bold mb-6 font-arabic">
-        ✍️ منشور جديد
+        ✍️ Create New Post
       </h1>
 
       <div className="bg-white rounded-[24px] p-6 shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-warm-border flex flex-col gap-5">
         {/* Title */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">العنوان</label>
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Title</label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-            placeholder="عنوان المنشور"
+            placeholder="Post Title"
             maxLength={100}
           />
         </div>
 
         {/* Content */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">المحتوى</label>
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Content</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px] resize-none h-32"
-            placeholder="اكتب محتوى المنشور..."
+            placeholder="Write your post content..."
           />
         </div>
 
         {/* Category */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">التصنيف</label>
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
               <button
@@ -174,7 +174,7 @@ export default function NewPostPage() {
         {/* Images */}
         <div>
           <label className="text-text-secondary text-[14px] font-medium mb-2 block">
-            الصور ({images.length}/5)
+            Images ({images.length}/5)
           </label>
           <div className="flex gap-3 flex-wrap">
             {images.map((img, i) => (
@@ -194,7 +194,7 @@ export default function NewPostPage() {
                 className="w-24 h-24 rounded-xl border-2 border-dashed border-warm-border flex flex-col items-center justify-center text-text-muted hover:border-ocean/50 hover:text-ocean transition-colors"
               >
                 <ImagePlus className="w-6 h-6 mb-1" />
-                <span className="text-[11px]">إضافة</span>
+                <span className="text-[11px]">Add</span>
               </button>
             )}
           </div>
@@ -211,20 +211,20 @@ export default function NewPostPage() {
         {/* Location */}
         <div>
           <label className="text-text-secondary text-[14px] font-medium mb-2 block">
-            <MapPin className="w-4 h-4 inline ml-1" /> الموقع
+            <MapPin className="w-4 h-4 inline mr-1" /> Location
           </label>
           <input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-            placeholder="المدينة القديمة، الصويرة"
+            placeholder="Old Medina, Essaouira"
           />
         </div>
 
         {/* Tags */}
         <div>
           <label className="text-text-secondary text-[14px] font-medium mb-2 block">
-            <Tag className="w-4 h-4 inline ml-1" /> الوسوم
+            <Tag className="w-4 h-4 inline mr-1" /> Tags
           </label>
           <div className="flex gap-2 flex-wrap mb-2">
             {tags.map((tag) => (
@@ -245,7 +245,7 @@ export default function NewPostPage() {
               onChange={(e) => setTagInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
               className="flex-1 bg-warm-sand border border-warm-border rounded-xl px-4 py-2 text-text-primary text-[14px] focus:outline-none focus:border-ocean/50"
-              placeholder="اكتب وسم ثم Enter"
+              placeholder="Type tag and press Enter"
             />
           </div>
         </div>
@@ -262,7 +262,7 @@ export default function NewPostPage() {
           ) : (
             <span className="flex items-center justify-center gap-2">
               <Upload className="w-5 h-5" />
-              نشر المنشور
+              Publish Post
             </span>
           )}
         </motion.button>

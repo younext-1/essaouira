@@ -11,12 +11,13 @@ export function TopBar() {
   const { isSignedIn } = useUser();
   const [lang, setLang] = useState("EN");
 
-  let title = "موكادور";
-  if (pathname === "/") title = "اكتشف موكادور";
-  else if (pathname === "/profile") title = "ملفي الشخصي";
-  else if (pathname === "/marketplace") title = "السوق";
-  else if (pathname === "/book") title = "احجز مرشداً";
-  else if (pathname === "/ai-guide") title = "مرحباً بموكادور";
+  let title = "Mogador";
+  if (pathname === "/") title = "Discover Mogador";
+  else if (pathname === "/profile") title = "My Profile";
+  else if (pathname.startsWith("/profile/edit")) title = "Edit Profile";
+  else if (pathname === "/marketplace") title = "Marketplace";
+  else if (pathname === "/book") title = "Book a Guide";
+  else if (pathname === "/ai-guide") title = "AI Guide";
 
   return (
     <header className="h-[48px] md:h-[56px] pt-[env(safe-area-inset-top)] w-full flex items-center justify-between px-4 bg-white border-b border-warm-border shadow-[0_1px_8px_rgba(0,0,0,0.06)] shrink-0 z-40">
@@ -57,7 +58,7 @@ export function TopBar() {
               whileTap={{ scale: 0.9 }}
               className="px-4 py-2 rounded-xl bg-terracotta text-white text-[13px] font-medium hover:bg-[#A83A0C] transition-colors"
             >
-              تسجيل الدخول
+              Sign In
             </motion.button>
           </SignInButton>
         )}

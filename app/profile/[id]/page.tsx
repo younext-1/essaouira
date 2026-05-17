@@ -78,7 +78,7 @@ const Facebook = ({ className }: { className?: string }) => (
 // Loading skeleton for profile
 function ProfileSkeleton() {
   return (
-    <div className="w-full min-h-screen bg-warm-white pb-[100px]" dir="rtl">
+    <div className="w-full min-h-screen bg-warm-white pb-[100px]" dir="ltr">
       <div className="w-full h-[280px] md:h-[400px] animate-shimmer rounded-b-[40px]" />
       <div className="px-6 mt-16 mb-8 flex flex-col items-center">
         <div className="w-40 h-6 animate-shimmer rounded-full mb-3" />
@@ -153,10 +153,10 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
   if (loading) return <ProfileSkeleton />;
   if (!data) {
     return (
-      <div className="w-full min-h-screen bg-warm-white flex items-center justify-center" dir="rtl">
+      <div className="w-full min-h-screen bg-warm-white flex items-center justify-center" dir="ltr">
         <div className="text-center">
-          <h2 className="text-text-primary text-2xl font-bold mb-2">الملف غير موجود</h2>
-          <p className="text-text-muted">لم نجد هذا الملف الشخصي</p>
+          <h2 className="text-text-primary text-2xl font-bold mb-2">Profile not found</h2>
+          <p className="text-text-muted">We couldn&apos;t find this profile</p>
         </div>
       </div>
     );
@@ -165,7 +165,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
   const { profile, stats, specialties, services, portfolio, reviews } = data;
 
   return (
-    <div className="w-full min-h-screen bg-warm-white pb-[100px] overflow-x-hidden relative" dir="rtl">
+    <div className="w-full min-h-screen bg-warm-white pb-[100px] overflow-x-hidden relative" dir="ltr">
       
       {/* SECTION 1: HERO COVER */}
       <div className="relative w-full h-[280px] md:h-[400px] bg-warm-white">
@@ -182,12 +182,12 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
 
         <div className="absolute top-4 md:top-8 right-4 left-4 flex justify-end items-center z-10 pt-[env(safe-area-inset-top)]">
           <button className="h-[42px] px-5 rounded-full bg-black/20 hover:bg-black/30 backdrop-blur-md flex items-center justify-center border border-white/20 text-white transition-all shadow-lg group">
-            <Share2 className="w-[18px] h-[18px] ml-2 transition-transform group-hover:scale-110" />
-            <span className="text-[14px] font-medium tracking-wide">مشاركة</span>
+            <Share2 className="w-[18px] h-[18px] mr-2 transition-transform group-hover:scale-110" />
+            <span className="text-[14px] font-medium tracking-wide">Share</span>
           </button>
         </div>
 
-        <div className="absolute -bottom-[50px] md:-bottom-[70px] right-1/2 translate-x-1/2 md:translate-x-0 md:right-12 z-20">
+        <div className="absolute -bottom-[50px] md:-bottom-[70px] left-1/2 -translate-x-1/2 md:translate-x-0 md:left-12 z-20">
           <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 200, damping: 20 }} className="relative">
             <div className="relative w-[100px] h-[100px] md:w-[140px] md:h-[140px] rounded-full p-1.5 md:p-2 bg-warm-white shadow-[0_12px_40px_rgba(0,0,0,0.12)]">
               <div className="w-full h-full rounded-full overflow-hidden relative bg-warm-sand border border-warm-border">
@@ -200,7 +200,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
                 )}
               </div>
               {profile.verified && (
-                <div className="absolute bottom-1 left-1 md:bottom-2 md:left-2 bg-gradient-to-tr from-ocean to-seafoam rounded-full p-1.5 shadow-md border-[2px] md:border-[3px] border-warm-white">
+                <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2 bg-gradient-to-tr from-ocean to-seafoam rounded-full p-1.5 shadow-md border-[2px] md:border-[3px] border-warm-white">
                   <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
                 </div>
               )}
@@ -210,7 +210,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Info Name */}
-      <div className="px-6 md:px-12 mt-16 md:mt-24 mb-8 relative z-10 flex flex-col items-center md:items-start text-center md:text-right">
+      <div className="px-6 md:px-12 mt-16 md:mt-24 mb-8 relative z-10 flex flex-col items-center md:items-start text-center md:text-left">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.4 }}>
           <div className="flex flex-col items-center md:items-start">
             <h1 className="text-text-primary text-[28px] md:text-[36px] font-bold leading-tight font-display tracking-tight">
@@ -236,7 +236,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
       {stats.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mx-4 md:mx-8 bg-white rounded-[16px] grid grid-cols-2 md:flex border border-warm-border shadow-[0_4px_20px_rgba(0,0,0,0.06)] mb-8 overflow-hidden">
           {stats.map((stat, i) => (
-            <div key={stat.id} className={`flex-1 flex justify-center py-3 md:py-3 ${i % 2 === 0 ? 'border-l border-warm-border md:border-none' : ''} ${i < 2 ? 'border-b border-warm-border md:border-none' : ''} ${i !== stats.length - 1 ? 'md:border-l md:border-warm-border' : ''}`}>
+            <div key={stat.id} className={`flex-1 flex justify-center py-3 md:py-3 ${i % 2 === 0 ? 'border-r border-warm-border md:border-none' : ''} ${i < 2 ? 'border-b border-warm-border md:border-none' : ''} ${i !== stats.length - 1 ? 'md:border-r md:border-warm-border' : ''}`}>
               <CountUpStat value={stat.value} suffix={stat.suffix} label={stat.label} />
             </div>
           ))}
@@ -247,13 +247,13 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         {/* SECTION 3: ABOUT */}
         {profile.bio && (
           <section className="px-4 md:px-8 mb-10">
-            <SectionTitle>قصتي</SectionTitle>
+            <SectionTitle>My Story</SectionTitle>
             <motion.div layout className="relative">
               <p className={`text-text-secondary text-[15px] leading-[1.8] ${!expandedAbout ? 'line-clamp-3' : ''}`}>
                 {profile.bio}
               </p>
               <button onClick={() => setExpandedAbout(!expandedAbout)} className="flex items-center gap-1 mt-2 text-ocean text-[13px] font-medium">
-                {expandedAbout ? (<>إخفاء <ChevronUp className="w-4 h-4" /></>) : (<>اقرأ المزيد <ChevronDown className="w-4 h-4" /></>)}
+                {expandedAbout ? (<>Show Less <ChevronUp className="w-4 h-4" /></>) : (<>Read More <ChevronDown className="w-4 h-4" /></>)}
               </button>
             </motion.div>
           </section>
@@ -262,7 +262,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         {/* SECTION 4: SPECIALTIES */}
         {specialties.length > 0 && (
           <section className="mb-10 w-full overflow-hidden">
-            <div className="px-4 md:px-8"><SectionTitle>تخصصاتي</SectionTitle></div>
+            <div className="px-4 md:px-8"><SectionTitle>My Specialties</SectionTitle></div>
             <div className="flex gap-3 overflow-x-auto hide-scrollbar px-4 md:px-8 pb-4 snap-x snap-mandatory">
               {specialties.map((spec, i) => (
                 <motion.div key={spec.id} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className={`snap-start shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-[14px] font-medium transition-all ${spec.is_active ? 'bg-terracotta text-white shadow-[0_4px_12px_rgba(193,68,14,0.3)]' : 'border border-warm-border bg-warm-sand text-text-secondary hover:border-terracotta/50'}`}>
@@ -276,7 +276,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         {/* SECTION 5: PORTFOLIO */}
         {portfolio.length > 0 && (
           <section className="mb-10 w-full overflow-hidden">
-            <div className="px-4 md:px-8"><SectionTitle>أعمالي المميزة</SectionTitle></div>
+            <div className="px-4 md:px-8"><SectionTitle>Featured Works</SectionTitle></div>
             <div className="flex gap-4 overflow-x-auto hide-scrollbar px-4 md:px-8 pb-6 snap-x snap-mandatory">
               {portfolio.map((item, i) => (
                 <motion.div key={item.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, margin: "-50px" }} transition={{ delay: i * 0.1 }} whileTap={{ scale: 0.96 }} className="snap-start shrink-0 w-[220px] h-[280px] rounded-[20px] overflow-hidden relative group cursor-pointer border border-warm-border shadow-[0_2px_16px_rgba(26,26,46,0.07)]">
@@ -284,7 +284,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                   {item.price_mad && (
                     <div className="absolute top-3 left-3 bg-saffron text-white text-[12px] font-bold px-3 py-1 rounded-full shadow-lg">
-                      {item.price_mad} درهم
+                      {item.price_mad} MAD
                     </div>
                   )}
                   <div className="absolute bottom-4 right-4 left-4">
@@ -299,7 +299,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         {/* SECTION 6: SERVICES */}
         {services.length > 0 && (
           <section className="mb-10 px-4 md:px-8">
-            <SectionTitle>خدماتي</SectionTitle>
+            <SectionTitle>My Services</SectionTitle>
             <div className="flex flex-col gap-4">
               {services.map((service, i) => (
                 <motion.div key={service.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="bg-white rounded-[16px] p-4 border border-warm-border shadow-[0_2px_16px_rgba(26,26,46,0.07)] flex flex-col md:flex-row gap-4">
@@ -315,7 +315,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
                     </div>
                   </div>
                   <div className="flex items-center justify-end shrink-0 mt-2 md:mt-0 pt-4 md:pt-0 border-t border-warm-border border-dashed md:border-none">
-                    <button className="w-full md:w-auto border border-terracotta text-terracotta hover:bg-terracotta hover:text-white text-[13px] font-medium px-6 py-2 rounded-full transition-colors text-center">اطلب →</button>
+                    <button className="w-full md:w-auto border border-terracotta text-terracotta hover:bg-terracotta hover:text-white text-[13px] font-medium px-6 py-2 rounded-full transition-colors text-center">Order →</button>
                   </div>
                 </motion.div>
               ))}
@@ -326,7 +326,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         {/* SECTION 7: REVIEWS */}
         {reviews.length > 0 && (
           <section className="mb-12 w-full overflow-hidden">
-            <div className="px-4 md:px-8"><SectionTitle>ماذا قال عملائي</SectionTitle></div>
+            <div className="px-4 md:px-8"><SectionTitle>Client Reviews</SectionTitle></div>
             <div className="flex gap-4 overflow-x-auto hide-scrollbar px-4 md:px-8 pb-6 snap-x snap-mandatory">
               {reviews.map((review, i) => (
                 <motion.div key={review.id} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }} className="snap-start shrink-0 w-[260px] bg-white rounded-[16px] p-5 border border-warm-border shadow-[0_2px_16px_rgba(26,26,46,0.07)] flex flex-col">
@@ -348,7 +348,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
 
         {/* SECTION 8: LOCATION */}
         <section className="mb-12 px-4 md:px-8">
-          <SectionTitle>زرني في الورشة</SectionTitle>
+          <SectionTitle>Visit my Workshop</SectionTitle>
           <DarkCard className="overflow-hidden p-0 border border-warm-border">
             <div className="w-full h-[160px] relative bg-warm-sand flex items-center justify-center">
               <Image src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop" alt="Map" fill className="object-cover opacity-60" />
@@ -358,19 +358,19 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
               </div>
             </div>
             <div className="p-5">
-              <h3 className="text-text-primary font-medium text-[15px] mb-4 flex items-center gap-2"><MapPin className="w-4 h-4 text-ocean"/>{profile.location || "الصويرة"}</h3>
+              <h3 className="text-text-primary font-medium text-[15px] mb-4 flex items-center gap-2"><MapPin className="w-4 h-4 text-ocean"/>{profile.location || "Essaouira"}</h3>
               <div className="space-y-2 mb-6">
                 <div className="flex justify-between text-[14px]">
-                  <span className="text-text-secondary">الاثنين - السبت</span>
+                  <span className="text-text-secondary">Monday - Saturday</span>
                   <span className="text-text-primary font-medium flex items-center gap-2">9:00 - 18:00 <span className="text-seafoam">✅</span></span>
                 </div>
                 <div className="flex justify-between text-[14px]">
-                  <span className="text-text-secondary">الأحد</span>
-                  <span className="text-text-primary font-medium flex items-center gap-2">مغلق <span className="text-terracotta">❌</span></span>
+                  <span className="text-text-secondary">Sunday</span>
+                  <span className="text-text-primary font-medium flex items-center gap-2">Closed <span className="text-terracotta">❌</span></span>
                 </div>
               </div>
               <a href="#" className="w-full py-3 rounded-xl border border-ocean text-ocean font-medium flex items-center justify-center gap-2 hover:bg-ocean hover:text-white transition-colors">
-                <MapPin className="w-4 h-4" /> احصل على الاتجاهات
+                <MapPin className="w-4 h-4" /> Get Directions
               </a>
             </div>
           </DarkCard>
@@ -380,14 +380,14 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         <section className="mb-12 px-4 md:px-8 flex flex-col gap-3">
           {profile.whatsapp && (
             <a href={profile.whatsapp} target="_blank" rel="noreferrer" className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-terracotta to-saffron text-white font-bold text-[16px] flex items-center justify-center gap-3 shadow-[0_8px_20px_rgba(193,68,14,0.3)] hover:scale-[1.02] transition-transform active:scale-95">
-              <MessageCircle className="w-5 h-5" /> راسلني مباشرة
+              <MessageCircle className="w-5 h-5" /> Message me directly
             </a>
           )}
           <button className="w-full h-[52px] rounded-[14px] border border-ocean bg-white text-ocean font-bold text-[16px] flex items-center justify-center gap-3 hover:bg-ocean hover:text-white transition-colors active:scale-95">
-            <Phone className="w-5 h-5" /> اتصل بي
+            <Phone className="w-5 h-5" /> Call me
           </button>
           <button className="w-full h-[52px] rounded-[14px] border border-ocean bg-white text-ocean font-bold text-[16px] flex items-center justify-center gap-3 hover:bg-ocean hover:text-white transition-colors active:scale-95">
-            <Store className="w-5 h-5" /> زر متجري
+            <Store className="w-5 h-5" /> Visit my Shop
           </button>
         </section>
 
@@ -414,8 +414,8 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
         {profile.custom_html_enabled && profile.custom_html && (
           <section className="mb-12 px-4 md:px-8">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <h2 className="text-text-primary text-[18px] font-display font-bold mb-2 flex items-center">صفحتي المخصصة</h2>
-              <p className="text-text-muted text-[12px] mb-4">✨ صممها {profile.full_name}</p>
+              <h2 className="text-text-primary text-[18px] font-display font-bold mb-2 flex items-center">My Custom Page</h2>
+              <p className="text-text-muted text-[12px] mb-4">✨ Crafted by {profile.full_name}</p>
               <div className="rounded-2xl overflow-hidden border border-warm-border">
                 <iframe
                   srcDoc={profile.custom_html}
@@ -442,7 +442,7 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
       {/* STICKY CTA */}
       <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: showSticky ? 0 : 100, opacity: showSticky ? 1 : 0 }} transition={{ type: "spring", bounce: 0.3 }} className="fixed bottom-[80px] md:bottom-6 right-4 left-4 md:left-auto md:w-[300px] z-50 pointer-events-none flex justify-center md:justify-end">
         <a href={profile.whatsapp || "#"} target="_blank" rel="noreferrer" className="pointer-events-auto shadow-2xl shadow-terracotta/30 bg-gradient-to-r from-terracotta to-saffron text-white px-6 py-3.5 rounded-full font-bold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-transform w-full md:w-auto">
-          <MessageCircle className="w-5 h-5" /> راسلني الآن
+          <MessageCircle className="w-5 h-5" /> Message me now
         </a>
       </motion.div>
     </div>

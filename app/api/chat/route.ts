@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
     // Mock AI response
     return NextResponse.json({
-      content: "هذا مجرد رد تجريبي. في بيئة الإنتاج، سيتم توصيل هذا بمفتاح API الخاص بـ Anthropic للرد بشكل حقيقي. \n\n الصويرة رائعة جداً، هل زرت الشاطئ اليوم؟"
+      content: "This is a mock response. In a production environment, this would connect to the Anthropic API to generate real answers.\n\nEssaouira is absolutely beautiful, have you visited the beach today?"
     });
 
     /* 

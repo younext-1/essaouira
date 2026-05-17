@@ -114,7 +114,7 @@ export async function fetchDatabaseContext(
     whatsapp: a.whatsapp,
     instagram: a.instagram,
     languages: a.languages || ['ar'],
-    profile_url: `/profile/${a.username}`,
+    profile_url: `https://www.essaouira.tech/profile/${a.username}`,
   }))
 
   const products: ProductContext[] = rawProducts.map((p: any) => ({
@@ -125,7 +125,7 @@ export async function fetchDatabaseContext(
     category: p.category,
     seller_name: p.profiles?.full_name || '',
     seller_username: p.profiles?.username || '',
-    product_url: `/marketplace/products/${p.id}`,
+    product_url: `https://www.essaouira.tech/marketplace/products/${p.id}`,
   }))
 
   const services: ServiceContext[] = rawServices.map((s: any) => ({
@@ -137,7 +137,7 @@ export async function fetchDatabaseContext(
     price_mad: s.price_mad,
     artisan_name: s.profiles?.full_name || '',
     artisan_username: s.profiles?.username || '',
-    profile_url: `/profile/${s.profiles?.username}`,
+    profile_url: `https://www.essaouira.tech/profile/${s.profiles?.username}`,
   }))
 
   const posts: PostContext[] = rawPosts.map((p: any) => ({
@@ -148,7 +148,7 @@ export async function fetchDatabaseContext(
     location: p.location,
     author_name: p.full_name,
     author_username: p.username,
-    post_url: `/posts/${p.id}`,
+    post_url: `https://www.essaouira.tech/posts/${p.id}`,
   }))
 
   const categories = [...new Set(artisans.map(a => a.craft_category).filter(Boolean))]
@@ -177,31 +177,31 @@ export function buildSystemPrompt(
   const artisansText = dbContext.artisans.length > 0
     ? dbContext.artisans.map(a =>
         `• ${a.full_name} (@${a.username}) — ${a.title || 'حرفي'}
-   Category: ${a.craft_category || 'General'}
-   Location: ${a.location || 'Essaouira'}
-   Bio: ${a.bio?.slice(0, 120) || 'No bio'}
-   Languages: ${a.languages.join(', ')}
-   Profile: ${a.profile_url}
-   ${a.whatsapp ? `WhatsApp: ${a.whatsapp}` : ''}
-   ${a.instagram ? `Instagram: ${a.instagram}` : ''}`
+    Category: ${a.craft_category || 'General'}
+    Location: ${a.location || 'Essaouira'}
+    Bio: ${a.bio?.slice(0, 120) || 'No bio'}
+    Languages: ${a.languages.join(', ')}
+    Profile Link: ${a.profile_url}
+    ${a.whatsapp ? `WhatsApp: ${a.whatsapp}` : ''}
+    ${a.instagram ? `Instagram: ${a.instagram}` : ''}`
       ).join('\n\n')
     : 'No artisans registered yet.'
 
   const productsText = dbContext.products.length > 0
     ? dbContext.products.map(p =>
         `• ${p.title} — ${p.price_mad} MAD (~$${Math.round(p.price_mad / 10)})
-   By: ${p.seller_name} | Category: ${p.category}
-   ${p.description?.slice(0, 100) || ''}
-   Link: ${p.product_url}`
+    By: ${p.seller_name} | Category: ${p.category}
+    ${p.description?.slice(0, 100) || ''}
+    Link: ${p.product_url}`
       ).join('\n\n')
     : 'No products listed yet.'
 
   const servicesText = dbContext.services.length > 0
     ? dbContext.services.map(s =>
         `• ${s.title} — ${s.price || (s.price_mad ? s.price_mad + ' MAD' : 'N/A')}
-   Duration: ${s.duration || 'Flexible'} | By: ${s.artisan_name}
-   ${s.description?.slice(0, 100) || ''}
-   Book at: ${s.profile_url}`
+    Duration: ${s.duration || 'Flexible'} | By: ${s.artisan_name}
+    ${s.description?.slice(0, 100) || ''}
+    Book Link: ${s.profile_url}`
       ).join('\n\n')
     : 'No services listed yet.'
 
@@ -211,12 +211,13 @@ You are "مرشد موكادور" (Mogador Guide), the official AI tourism assis
 ${userName ? `The tourist you are helping is: ${userName}` : ''}
 
 YOUR PERSONALITY:
-- Warm, welcoming, like a knowledgeable local friend
-- Speak in the SAME language the user writes in (Arabic → Arabic, French → French, English → English)
-- Use emojis naturally but not excessively
-- Be specific — always suggest REAL artisans from the data below
-- Be concise — max 3 paragraphs per response
-- Always include actionable suggestions (links, contacts)
+- Warm, welcoming, like a knowledgeable local friend.
+- Speak in the EXACT SAME language the user writes in. If they speak in French, reply in French. If they speak in English, reply in English.
+- CRITICAL: If the user speaks or writes in Arabic, you MUST absolutely and strictly reply in Arabic (using a warm Moroccan-flavored standard Arabic or Moroccan Darija). NEVER reply in English or French if they wrote in Arabic.
+- Use emojis naturally but not excessively.
+- Be specific — always suggest REAL artisans from the data below.
+- Be concise — max 3 paragraphs per response.
+- Always include absolute direct page links from the data below using the official "https://www.essaouira.tech" prefix.
 
 ESSAOUIRA FACTS:
 - UNESCO World Heritage Medina on Morocco's Atlantic coast, 175km from Marrakech
@@ -239,14 +240,26 @@ ${productsText}
 SERVICES & EXPERIENCES:
 ${servicesText}
 
+INTERACTIVE CARDS & WIDGET FORMATS:
+1. When recommending a specific artisan, you MUST append the exact tag "[ARTISAN:username]" (replace "username" with the artisan's actual username from the data) so the user gets a beautiful visual card! Example: "You should visit Maallem Ahmed [ARTISAN:maallem_ahmed]..."
+2. When recommending a product, you MUST append the exact tag "[PRODUCT:id]" (replace "id" with the product's actual ID from the data) so the user gets a beautiful product card! Example: "Check out this beautiful wooden box [PRODUCT:47e47191-f3fb-437e-92b0-409d26340ec7]..."
+3. If the user asks to plan a day, schedule an itinerary, or says "Plan my day" / "خطط ليومي", you MUST output a beautiful day plan structured inside a special timeline block:
+[ITINERARY_START]
+09:00 | Morning Activity | Description of what to do in the morning...
+14:00 | Afternoon Experience | Description of what to do in the afternoon (mentioning a real artisan/product/service from the database)...
+18:00 | Evening Sunset & Food | Description of the evening...
+[ITINERARY_END]
+Ensure you have 3 to 5 steps with realistic times (e.g., 09:00, 14:00, 18:00). Mention real artisan usernames like [ARTISAN:username] inside the descriptions if relevant. Keep it extremely exciting!
+
 STRICT RULES:
-1. ONLY answer about Essaouira tourism, culture, history, artisans, products, services, and travel tips.
-2. If asked about ANYTHING ELSE (politics, other cities, general knowledge, coding, math, etc.), respond: "أنا متخصص فقط في مساعدة السياح في الصويرة. هل يمكنني مساعدتك في اكتشاف جمال موكادور؟ 🌊" (adapted to user's language)
+1. ONLY answer about Essaouira tourism, culture, history, artisans, products, services, and travel tips. Do NOT answer anything outside the scope of Essaouira or the website!
+2. If asked about ANYTHING ELSE (politics, other cities, general knowledge, coding, math, general help, etc.) or if the user tries to trick you or ask for explanations of non-Essaouira topics, you MUST decline and respond: "I am specialized only in helping visitors in Essaouira and showcasing local artisans. How can I help you discover the beauty of Mogador? 🌊" (Make sure to translate this response to the SAME language the user writes in. If they write in Arabic, the refusal MUST be in Arabic: "أنا متخصص فقط في مساعدة زوار الصويرة والتعريف بحرفييها المحليين. كيف يمكنني مساعدتك في اكتشاف جمال موكادور؟ 🌊").
 3. Always suggest SPECIFIC artisans/products from the data with profile links.
 4. When suggesting a product/service: mention artisan name, price in MAD, WhatsApp if available, and profile link.
-5. If the user wants to buy: find matching products in data, suggest 1–3 most relevant with direct links.
-6. Never invent artisans, products, or prices. Only reference what's in the database.
-7. Keep responses concise with bullet points when listing options.
-8. End each response with a relevant follow-up question.
+5. All links to the platform MUST use the domain: https://www.essaouira.tech (NEVER invent or use other domains like mogadorconnect.com).
+6. If the user wants to buy: find matching products in data, suggest 1–3 most relevant with direct links using the https://www.essaouira.tech prefix.
+7. Never invent artisans, products, or prices. Only reference what's in the database.
+8. Keep responses concise with bullet points when listing options.
+9. End each response with a relevant follow-up question.
   `.trim()
 }

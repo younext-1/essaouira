@@ -3,8 +3,8 @@ import { Loader2 } from 'lucide-react'
 import AiGuideClient from './AiGuideClient'
 
 export const metadata = {
-  title: 'مرشد موكادور الذكي | Mogador Connect',
-  description: 'اسأل مرشدنا الذكي عن الصويرة والحرفيين والتجارب السياحية',
+  title: 'Mogador Intelligent AI Guide | Mogador Connect',
+  description: 'Ask our intelligent AI guide about Essaouira, local artisans, and unique cultural experiences',
 }
 
 export default function AiGuidePage() {

@@ -9,7 +9,7 @@ export default function SignUpPage() {
             Mogador Connect
           </h1>
           <p className="text-text-secondary text-[15px]">
-            🌊 انضم إلى مجتمع موكادور
+            🌊 Join the Mogador community
           </p>
         </div>
         <SignUp

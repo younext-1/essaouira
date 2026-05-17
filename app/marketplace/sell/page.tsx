@@ -9,8 +9,7 @@ import { motion } from "framer-motion";
 import { Upload, X, ImagePlus, Save } from "lucide-react";
 import Image from "next/image";
 
-const CATEGORIES = ["خشب الثويا", "فضة", "نسيج", "توابل", "فخار", "أخرى"];
-const SHIPPING = ["توصيل داخل المغرب", "شحن دولي", "استلام شخصي"];
+const CATEGORIES = ["Thuya Wood", "Silver", "Weaving", "Spices", "Pottery", "Other"];
 
 export default function SellProductPage() {
   const { isSignedIn } = useUser();
@@ -21,7 +20,7 @@ export default function SellProductPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("خشب الثويا");
+  const [category, setCategory] = useState("Thuya Wood");
   const [priceMad, setPriceMad] = useState("");
   const [inStock, setInStock] = useState(true);
   const [image, setImage] = useState<{ file: File; preview: string } | null>(null);
@@ -29,11 +28,11 @@ export default function SellProductPage() {
 
   if (!isSignedIn || !profile || profile.role !== "artisan") {
     return (
-      <div className="flex-1 flex items-center justify-center p-8" dir="rtl">
+      <div className="flex-1 flex items-center justify-center p-8" dir="ltr">
         <div className="text-center">
           <div className="text-[48px] mb-4">🔒</div>
-          <h2 className="text-text-primary text-[20px] font-bold mb-2">متاح للحرفيين فقط</h2>
-          <p className="text-text-secondary text-[15px]">سجل كحرفي لبيع منتجاتك</p>
+          <h2 className="text-text-primary text-[20px] font-bold mb-2">Available for Artisans Only</h2>
+          <p className="text-text-secondary text-[15px]">Register as an artisan to sell your products</p>
         </div>
       </div>
     );
@@ -77,14 +76,14 @@ export default function SellProductPage() {
   };
 
   return (
-    <div className="flex-1 w-full max-w-[700px] mx-auto px-4 py-8" dir="rtl">
-      <h1 className="text-text-primary text-[24px] font-bold mb-6 font-arabic">🛍️ بيع منتج جديد</h1>
+    <div className="flex-1 w-full max-w-[700px] mx-auto px-4 py-8" dir="ltr">
+      <h1 className="text-text-primary text-[24px] font-bold mb-6 font-arabic">🛍️ Sell a New Product</h1>
 
       <div className="bg-white rounded-[24px] p-6 shadow-[0_8px_40px_rgba(0,0,0,0.06)] border border-warm-border flex flex-col gap-5">
 
         {/* Image */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">صورة المنتج</label>
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Product Image</label>
           {image ? (
             <div className="relative w-full h-48 rounded-xl overflow-hidden group">
               <Image src={image.preview} alt="" fill className="object-cover" />
@@ -92,7 +91,7 @@ export default function SellProductPage() {
             </div>
           ) : (
             <button onClick={() => fileInputRef.current?.click()} className="w-full h-48 rounded-xl border-2 border-dashed border-warm-border flex flex-col items-center justify-center text-text-muted hover:border-ocean/50 hover:text-ocean transition-colors">
-              <ImagePlus className="w-8 h-8 mb-2" /><span className="text-[13px]">اضغط لإضافة صورة</span>
+              <ImagePlus className="w-8 h-8 mb-2" /><span className="text-[13px]">Click to add image</span>
             </button>
           )}
           <input ref={fileInputRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files && handleImageSelect(e.target.files)} />
@@ -100,19 +99,19 @@ export default function SellProductPage() {
 
         {/* Title */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">اسم المنتج</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]" placeholder="صندوق ثويا منحوت" maxLength={100} />
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Product Name</label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]" placeholder="Carved Thuya Box" maxLength={100} />
         </div>
 
         {/* Description */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">الوصف</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px] resize-none h-24" placeholder="وصف المنتج..." maxLength={300} />
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Description</label>
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px] resize-none h-24" placeholder="Product description..." maxLength={300} />
         </div>
 
         {/* Category */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">التصنيف</label>
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Category</label>
           <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
               <button key={cat} onClick={() => setCategory(cat)} className={`px-4 py-2 rounded-full text-[14px] font-medium transition-all ${category === cat ? "bg-terracotta text-white shadow-md" : "bg-warm-sand border border-warm-border text-text-secondary"}`}>{cat}</button>
@@ -122,22 +121,22 @@ export default function SellProductPage() {
 
         {/* Price */}
         <div>
-          <label className="text-text-secondary text-[14px] font-medium mb-2 block">السعر (درهم)</label>
+          <label className="text-text-secondary text-[14px] font-medium mb-2 block">Price (MAD)</label>
           <input type="number" value={priceMad} onChange={(e) => setPriceMad(e.target.value)} className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary placeholder:text-text-muted focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]" placeholder="350" dir="ltr" />
           {priceMad && <p className="text-text-muted text-[12px] mt-1 text-left" dir="ltr">≈ ${(parseFloat(priceMad) * 0.1).toFixed(0)} USD</p>}
         </div>
 
         {/* In stock */}
         <div className="flex items-center justify-between bg-warm-sand rounded-xl px-4 py-3 border border-warm-border">
-          <span className="text-text-primary text-[14px] font-medium">متوفر في المخزون</span>
+          <span className="text-text-primary text-[14px] font-medium">In Stock</span>
           <button onClick={() => setInStock(!inStock)} className={`w-12 h-7 rounded-full transition-colors relative ${inStock ? "bg-green-500" : "bg-gray-300"}`}>
-            <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-1 transition-all ${inStock ? "right-1" : "right-6"}`} />
+            <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-1 transition-all ${inStock ? "left-6" : "left-1"}`} />
           </button>
         </div>
 
         {/* Submit */}
         <motion.button whileTap={{ scale: 0.97 }} onClick={handleSubmit} disabled={submitting || !title.trim() || !priceMad} className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-terracotta to-saffron text-white font-bold text-[16px] shadow-[0_8px_20px_rgba(193,68,14,0.3)] hover:scale-[1.02] transition-transform active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed mt-2">
-          {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> نشر المنتج</span>}
+          {submitting ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> Publish Product</span>}
         </motion.button>
       </div>
     </div>

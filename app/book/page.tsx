@@ -59,7 +59,7 @@ export default function BookGuidePage() {
             return {
               id: p.id,
               name: p.full_name || p.username || "",
-              specialty: p.title || "مرشد محلي",
+              specialty: p.title || "Local Guide",
               rating: avg,
               available: true,
               avatar: p.avatar_url || "",
@@ -102,7 +102,7 @@ export default function BookGuidePage() {
   };
 
   return (
-    <div className="w-full flex flex-col p-4 max-w-4xl mx-auto pb-32" dir="rtl">
+    <div className="w-full flex flex-col p-4 max-w-4xl mx-auto pb-32" dir="ltr">
       
       <div className="flex flex-col gap-4">
         {loading ? (
@@ -117,7 +117,7 @@ export default function BookGuidePage() {
           ))
         ) : guides.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-text-muted text-[16px]">لا يوجد مرشدين حالياً</p>
+            <p className="text-text-muted text-[16px]">No guides available at the moment</p>
           </div>
         ) : (
           guides.map((guide, i) => (
@@ -146,7 +146,7 @@ export default function BookGuidePage() {
                   onClick={() => setSelectedGuide(guide)}
                   className="h-[36px] px-4 text-[13px] rounded-full shrink-0"
                 >
-                  احجز
+                  Book
                 </GradientButton>
               </DarkCard>
             </motion.div>
@@ -171,7 +171,7 @@ export default function BookGuidePage() {
             >
               <button 
                 onClick={() => setSelectedGuide(null)}
-                className="absolute top-4 left-4 text-text-muted hover:text-text-primary transition-colors"
+                className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -179,12 +179,12 @@ export default function BookGuidePage() {
               {success ? (
                 <div className="text-center py-8">
                   <div className="text-[48px] mb-4">✅</div>
-                  <h2 className="text-text-primary font-bold text-xl mb-2">تم الحجز بنجاح!</h2>
-                  <p className="text-text-secondary">سيتواصل معك المرشد قريباً</p>
+                  <h2 className="text-text-primary font-bold text-xl mb-2">Booking Successful!</h2>
+                  <p className="text-text-secondary">The guide will contact you shortly</p>
                 </div>
               ) : (
                 <>
-                  <h2 className="text-text-primary font-bold text-xl mb-6 font-arabic text-center">حجز جولة</h2>
+                  <h2 className="text-text-primary font-bold text-xl mb-6 font-arabic text-center">Book a Tour</h2>
                   
                   <div className="flex items-center gap-4 mb-6 p-3 bg-warm-sand rounded-[16px] border border-warm-border">
                     <GradientAvatar src={selectedGuide.avatar} alt={selectedGuide.name} size={48} />
@@ -196,20 +196,20 @@ export default function BookGuidePage() {
 
                   <form onSubmit={handleBooking} className="flex flex-col gap-4">
                     <div>
-                      <label className="text-text-secondary text-sm font-medium mb-2 block">التاريخ</label>
-                      <DarkInput type="date" className="w-full text-right" value={bookingDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBookingDate(e.target.value)} required />
+                      <label className="text-text-secondary text-sm font-medium mb-2 block">Date</label>
+                      <DarkInput type="date" className="w-full text-left" value={bookingDate} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBookingDate(e.target.value)} required />
                     </div>
                     
                     <div>
-                      <label className="text-text-secondary text-sm font-medium mb-2 block">الوقت</label>
-                      <DarkInput type="time" className="w-full text-right" value={bookingTime} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBookingTime(e.target.value)} />
+                      <label className="text-text-secondary text-sm font-medium mb-2 block">Time</label>
+                      <DarkInput type="time" className="w-full text-left" value={bookingTime} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBookingTime(e.target.value)} />
                     </div>
 
                     <div>
-                      <label className="text-text-secondary text-sm font-medium mb-2 block">ملاحظات إضافية</label>
+                      <label className="text-text-secondary text-sm font-medium mb-2 block">Additional Notes</label>
                       <textarea 
                         className="bg-warm-sand border border-warm-border rounded-[12px] text-text-primary px-[14px] py-[14px] placeholder:text-text-muted focus:outline-none focus:border-ocean/50 transition-colors w-full resize-none h-24"
-                        placeholder="أي طلبات خاصة؟"
+                        placeholder="Any special requests?"
                         value={bookingNotes}
                         onChange={(e) => setBookingNotes(e.target.value)}
                       />
@@ -218,7 +218,7 @@ export default function BookGuidePage() {
                     <GradientButton className="w-full h-[52px] text-[16px] mt-4" disabled={submitting || !user}>
                       {submitting ? (
                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : !user ? "سجل الدخول للحجز" : "تأكيد الحجز"}
+                      ) : !user ? "Sign In to Book" : "Confirm Booking"}
                     </GradientButton>
                   </form>
                 </>

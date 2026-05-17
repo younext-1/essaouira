@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'unauthorized',
-        message: 'يجب تسجيل الدخول أولاً للتحدث مع المرشد الذكي.',
+        message: 'Please sign in first to talk to the AI Guide.',
         messageFr: 'Veuillez vous connecter pour utiliser le guide IA.',
         messageEn: 'Please sign in to use the AI Guide.',
         requiresAuth: true,
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'not_configured',
-        message: 'المرشد الذكي غير مُهيَّأ بعد. يرجى إضافة مفاتيح Gemini API.',
+        message: 'AI Guide is not configured yet. Please configure Gemini API keys.',
       },
       { status: 503 }
     )
@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'service_unavailable',
-        message: 'المرشد الذكي مشغول حالياً. يرجى المحاولة بعد دقيقة.',
+        message: 'The AI Guide is busy at the moment. Please try again in a minute.',
         retry: true,
       },
       { status: 503 }

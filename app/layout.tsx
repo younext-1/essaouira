@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { arSA } from "@clerk/localizations";
 import { Playfair_Display, Inter, Noto_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { ProfileProvider } from "@/lib/auth/profile-provider";
@@ -25,8 +24,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider localization={arSA}>
-      <html lang="ar" dir="rtl" className={`${playfair.variable} ${inter.variable} ${arabic.variable} h-full antialiased`}>
+    <ClerkProvider>
+      <html lang="en" dir="ltr" className={`${playfair.variable} ${inter.variable} ${arabic.variable} h-full antialiased`}>
         <body className="h-full bg-warm-white text-text-primary overflow-hidden">
           <ProfileProvider>
             <AuthModalProvider>

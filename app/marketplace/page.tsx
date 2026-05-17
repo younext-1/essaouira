@@ -21,8 +21,8 @@ interface LocalProduct extends Product {
 }
 
 export default function MarketplacePage() {
-  const [activeCategory, setActiveCategory] = useState("الكل");
-  const categories = ["الكل", "خشب الثويا", "فضة", "نسيج", "توابل", "فخار"];
+  const [activeCategory, setActiveCategory] = useState("All");
+  const categories = ["All", "Thuya Wood", "Silver", "Weaving", "Spices", "Pottery"];
   const [products, setProducts] = useState<LocalProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -42,13 +42,13 @@ export default function MarketplacePage() {
         .eq("in_stock", true)
         .order("created_at", { ascending: false });
 
-      if (activeCategory !== "الكل") {
+      if (activeCategory !== "All") {
         query = query.eq("category", activeCategory);
       }
 
       const { data } = await query;
 
-      // Get user's bookmarked products (using bookmarks table with product_id pattern)
+      // Get user's bookmarked products
       let savedIds: string[] = [];
       if (user) {
         const { data: bookmarks } = await supabase
@@ -85,20 +85,20 @@ export default function MarketplacePage() {
   };
 
   const filteredProducts = searchQuery
-    ? products.filter(p => p.title.includes(searchQuery) || p.description?.includes(searchQuery))
+    ? products.filter(p => p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.description?.toLowerCase().includes(searchQuery.toLowerCase()))
     : products;
 
   return (
-    <div className="w-full flex flex-col p-4 max-w-6xl mx-auto pb-32" dir="rtl">
+    <div className="w-full flex flex-col p-4 max-w-6xl mx-auto pb-32" dir="ltr">
       
       {/* Search */}
       <div className="relative mb-6">
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">
           <Search className="w-5 h-5" />
         </div>
         <DarkInput 
-          placeholder="ابحث عن منتجات..." 
-          className="w-full pl-4 pr-12"
+          placeholder="Search products..." 
+          className="w-full pl-12 pr-4"
           value={searchQuery}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
         />
@@ -131,7 +131,7 @@ export default function MarketplacePage() {
           ))
         ) : filteredProducts.length === 0 ? (
           <div className="col-span-full text-center py-20">
-            <p className="text-text-muted text-[16px]">لا توجد منتجات</p>
+            <p className="text-text-muted text-[16px]">No products found</p>
           </div>
         ) : (
           filteredProducts.map((product, i) => (
@@ -148,7 +148,7 @@ export default function MarketplacePage() {
                     )}
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSave(product.id); }}
-                      className="absolute top-3 left-3 bg-white/80 backdrop-blur-md p-2 rounded-full border border-warm-border/50"
+                      className="absolute top-3 right-3 bg-white/80 backdrop-blur-md p-2 rounded-full border border-warm-border/50"
                     >
                       <Bookmark className={`w-4 h-4 ${product.saved ? "fill-terracotta text-terracotta" : "text-text-primary"}`} />
                     </button>
@@ -159,8 +159,8 @@ export default function MarketplacePage() {
                     <p className="text-text-muted text-[13px] mb-4">{product.description || ""}</p>
                     
                     <div className="mt-auto">
-                      <GradientText className="text-[18px] font-bold block mb-4">{product.price_mad} درهم</GradientText>
-                      <GradientButton className="w-full h-[40px] text-[14px]">عرض المنتج</GradientButton>
+                      <GradientText className="text-[18px] font-bold block mb-4">{product.price_mad} MAD</GradientText>
+                      <GradientButton className="w-full h-[40px] text-[14px]">View Product</GradientButton>
                     </div>
                   </div>
                 </DarkCard>

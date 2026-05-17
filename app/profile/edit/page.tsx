@@ -6,7 +6,7 @@ import { useProfile } from "@/lib/auth/profile-provider";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Save, User, FileText, Briefcase, Code, Upload, Eye, EyeOff } from "lucide-react";
+import { Save, User, FileText, Briefcase, Code, Upload, Eye } from "lucide-react";
 
 type Tab = "basic" | "markdown" | "services" | "customhtml";
 
@@ -68,10 +68,10 @@ export default function EditProfilePage() {
   }
 
   const tabs = [
-    { key: "basic" as Tab, label: "المعلومات الأساسية", icon: User },
-    { key: "markdown" as Tab, label: "ملف MD", icon: FileText },
-    { key: "services" as Tab, label: "الخدمات والأعمال", icon: Briefcase },
-    { key: "customhtml" as Tab, label: "🎨 تخصيص الصفحة", icon: Code },
+    { key: "basic" as Tab, label: "Basic Info", icon: User },
+    { key: "markdown" as Tab, label: "MD Profile", icon: FileText },
+    { key: "services" as Tab, label: "Services & Works", icon: Briefcase },
+    { key: "customhtml" as Tab, label: "🎨 Page Customization", icon: Code },
   ];
 
   const handleHtmlUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,10 +163,10 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="flex-1 w-full max-w-[800px] mx-auto px-4 py-8" dir="rtl">
+    <div className="flex-1 w-full max-w-[800px] mx-auto px-4 py-8" dir="ltr">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-text-primary text-[24px] font-bold font-arabic">
-          ✏️ تعديل الملف الشخصي
+        <h1 className="text-text-primary text-[24px] font-bold">
+          ✏️ Edit Profile
         </h1>
         {success && (
           <motion.span
@@ -175,7 +175,7 @@ export default function EditProfilePage() {
             exit={{ opacity: 0 }}
             className="text-green-600 text-[14px] font-medium bg-green-50 px-4 py-2 rounded-full"
           >
-            ✓ تم الحفظ
+            ✓ Saved
           </motion.span>
         )}
       </div>
@@ -207,7 +207,7 @@ export default function EditProfilePage() {
           <div className="flex flex-col gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">الاسم الكامل</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">Full Name</label>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
@@ -215,7 +215,7 @@ export default function EditProfilePage() {
                 />
               </div>
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">اسم المستخدم</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">Username</label>
                 <input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -227,28 +227,28 @@ export default function EditProfilePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">التخصص</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">Title</label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-                  placeholder="حرفي خشب الثويا"
+                  placeholder="Thuya Wood Artisan"
                 />
               </div>
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">الموقع</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">Location</label>
                 <input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-                  placeholder="المدينة القديمة، الصويرة"
+                  placeholder="Medina, Essaouira"
                 />
               </div>
             </div>
 
             <div>
               <label className="text-text-secondary text-[14px] font-medium mb-2 block">
-                نبذة <span className="text-text-muted">({bio.length}/200)</span>
+                Bio <span className="text-text-muted">({bio.length}/200)</span>
               </label>
               <textarea
                 value={bio}
@@ -260,25 +260,25 @@ export default function EditProfilePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">واتساب</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">WhatsApp</label>
                 <input value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} dir="ltr"
                   className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
                   placeholder="+212 6XX XXX XXX" />
               </div>
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">انستغرام</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">Instagram</label>
                 <input value={instagram} onChange={(e) => setInstagram(e.target.value)} dir="ltr"
                   className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
                   placeholder="@username" />
               </div>
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">فيسبوك</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">Facebook</label>
                 <input value={facebook} onChange={(e) => setFacebook(e.target.value)} dir="ltr"
                   className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
                   placeholder="facebook.com/page" />
               </div>
               <div>
-                <label className="text-text-secondary text-[14px] font-medium mb-2 block">تيك توك</label>
+                <label className="text-text-secondary text-[14px] font-medium mb-2 block">TikTok</label>
                 <input value={tiktok} onChange={(e) => setTiktok(e.target.value)} dir="ltr"
                   className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
                   placeholder="@username" />
@@ -296,7 +296,7 @@ export default function EditProfilePage() {
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <Save className="w-5 h-5" />
-                  حفظ المعلومات
+                  Save Info
                 </span>
               )}
             </motion.button>
@@ -307,13 +307,13 @@ export default function EditProfilePage() {
         {activeTab === "markdown" && (
           <div className="flex flex-col gap-4">
             <p className="text-text-secondary text-[14px]">
-              اكتب وصفاً مفصلاً لملفك الشخصي بصيغة Markdown
+              Write a detailed description for your profile in Markdown format
             </p>
             <textarea
               value={profileMd}
               onChange={(e) => setProfileMd(e.target.value)}
               className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary font-mono text-[14px] focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 resize-none min-h-[400px]"
-              placeholder="# عنوان&#10;&#10;اكتب هنا..."
+              placeholder="# Title&#10;&#10;Write here..."
               dir="auto"
             />
             <motion.button
@@ -327,7 +327,7 @@ export default function EditProfilePage() {
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <Save className="w-5 h-5" />
-                  حفظ الملف
+                  Save Profile
                 </span>
               )}
             </motion.button>
@@ -338,29 +338,29 @@ export default function EditProfilePage() {
         {activeTab === "services" && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Briefcase className="w-12 h-12 text-text-muted mb-4" />
-            <h3 className="text-text-primary text-[18px] font-bold mb-2 font-arabic">إدارة الخدمات والأعمال</h3>
-            <p className="text-text-secondary text-[14px] max-w-sm">قريباً: إضافة وتعديل الخدمات وعرض الأعمال مباشرة من هنا</p>
+            <h3 className="text-text-primary text-[18px] font-bold mb-2">Manage Services & Works</h3>
+            <p className="text-text-secondary text-[14px] max-w-sm">Coming soon: Add and edit services and showcase works directly from here</p>
           </div>
         )}
 
         {/* TAB 4: Custom HTML */}
         {activeTab === "customhtml" && (
           <div className="flex flex-col gap-5">
-            <p className="text-text-secondary text-[14px]">ارفع ملف HTML لتخصيص الجزء السفلي من صفحة بروفيلك</p>
+            <p className="text-text-secondary text-[14px]">Upload an HTML file to customize the bottom section of your profile page</p>
 
             {/* Toggle */}
             <div className="flex items-center justify-between bg-warm-sand rounded-xl px-4 py-3 border border-warm-border">
-              <span className="text-text-primary text-[14px] font-medium">تفعيل التخصيص</span>
+              <span className="text-text-primary text-[14px] font-medium">Enable Customization</span>
               <button onClick={() => setCustomHtmlEnabled(!customHtmlEnabled)} className={`w-12 h-7 rounded-full transition-colors relative ${customHtmlEnabled ? "bg-ocean" : "bg-gray-300"}`}>
-                <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-1 transition-all ${customHtmlEnabled ? "right-1" : "right-6"}`} />
+                <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-1 transition-all ${customHtmlEnabled ? "left-6" : "left-1"}`} />
               </button>
             </div>
 
             {/* Upload */}
             <div onClick={() => htmlInputRef.current?.click()} className="border-2 border-dashed border-warm-border rounded-xl p-8 text-center cursor-pointer hover:border-ocean/50 transition-colors">
               <Upload className="w-10 h-10 text-text-muted mx-auto mb-3" />
-              <p className="text-text-primary text-[14px] font-medium mb-1">اضغط لرفع ملف HTML</p>
-              <p className="text-text-muted text-[12px]">يدعم: .html, .htm</p>
+              <p className="text-text-primary text-[14px] font-medium mb-1">Click to upload HTML file</p>
+              <p className="text-text-muted text-[12px]">Supports: .html, .htm</p>
               {customHtmlFilename && <p className="text-ocean text-[13px] mt-2">📄 {customHtmlFilename}</p>}
             </div>
             <input ref={htmlInputRef} type="file" accept=".html,.htm" hidden onChange={handleHtmlUpload} />
@@ -368,7 +368,7 @@ export default function EditProfilePage() {
             {/* Preview */}
             {customHtml && (
               <div>
-                <h4 className="text-text-primary text-[14px] font-medium mb-2 flex items-center gap-2"><Eye className="w-4 h-4" /> معاينة</h4>
+                <h4 className="text-text-primary text-[14px] font-medium mb-2 flex items-center gap-2"><Eye className="w-4 h-4" /> Preview</h4>
                 <div className="rounded-xl overflow-hidden border border-warm-border">
                   <iframe srcDoc={customHtml} className="w-full min-h-[400px]" sandbox="allow-scripts" title="Custom HTML Preview" />
                 </div>
@@ -377,7 +377,7 @@ export default function EditProfilePage() {
 
             <motion.button whileTap={{ scale: 0.97 }} onClick={saveCustomHtml} disabled={saving}
               className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-[16px] shadow-[0_8px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] transition-transform disabled:opacity-60">
-              {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> حفظ التخصيص</span>}
+              {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> Save Customization</span>}
             </motion.button>
           </div>
         )}

@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { MapPin, MessageCircle, Bookmark, ArrowRight, ShoppingBag, Image as ImageIcon } from "lucide-react";
+import { MapPin, MessageCircle, Bookmark, ArrowLeft, ShoppingBag, Image as ImageIcon } from "lucide-react";
 import { GradientAvatar } from "@/components/ui/GradientAvatar";
 import { createClient } from "@/lib/supabase/client";
 import type { Product, Profile } from "@/lib/database.types";
@@ -34,23 +34,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }, [id]);
 
   if (loading) return <div className="flex-1 flex items-center justify-center"><div className="w-8 h-8 border-2 border-ocean/30 border-t-ocean rounded-full animate-spin" /></div>;
-  if (!product) return <div className="flex-1 flex items-center justify-center text-center p-8" dir="rtl"><div><div className="text-[48px] mb-4">😕</div><h2 className="text-text-primary text-[20px] font-bold mb-2">المنتج غير موجود</h2><Link href="/marketplace" className="text-ocean hover:underline">العودة للسوق</Link></div></div>;
+  if (!product) return <div className="flex-1 flex items-center justify-center text-center p-8" dir="ltr"><div><div className="text-[48px] mb-4">😕</div><h2 className="text-text-primary text-[20px] font-bold mb-2">Product not found</h2><Link href="/marketplace" className="text-ocean hover:underline">Back to Marketplace</Link></div></div>;
 
   const usdPrice = (product.price_mad * 0.1).toFixed(0);
-  const whatsappUrl = seller?.whatsapp ? `https://wa.me/${seller.whatsapp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`مرحباً! أريد الاستفسار عن: ${product.title}`)}` : "#";
+  const whatsappUrl = seller?.whatsapp ? `https://wa.me/${seller.whatsapp.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hello! I would like to inquire about: ${product.title}`)}` : "#";
 
   return (
-    <div className="flex-1 w-full max-w-[800px] mx-auto pb-24" dir="rtl">
+    <div className="flex-1 w-full max-w-[800px] mx-auto pb-24" dir="ltr">
       {/* Image */}
       <div className="relative w-full h-[300px] md:h-[450px] bg-warm-sand">
         {product.image_url ? <Image src={product.image_url} alt={product.title} fill className="object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-16 h-16 text-text-muted" /></div>}
-        <Link href="/marketplace" className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10"><ArrowRight className="w-5 h-5" /></Link>
+        <Link href="/marketplace" className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10"><ArrowLeft className="w-5 h-5" /></Link>
       </div>
 
       <div className="px-4 md:px-6">
         {/* Price */}
         <div className="flex items-baseline gap-3 mt-6 mb-2">
-          <span className="text-terracotta text-[28px] font-bold">{product.price_mad} درهم</span>
+          <span className="text-terracotta text-[28px] font-bold">{product.price_mad} MAD</span>
           <span className="text-text-muted text-[15px]">≈ ${usdPrice}</span>
         </div>
 
@@ -72,7 +72,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <h3 className="text-text-primary font-bold text-[16px]">{seller.full_name}</h3>
                 <p className="text-text-muted text-[13px]">{seller.location}</p>
               </div>
-              <span className="text-ocean text-[13px] font-medium shrink-0">عرض الملف ←</span>
+              <span className="text-ocean text-[13px] font-medium shrink-0">View Profile →</span>
             </div>
           </Link>
         )}
@@ -80,14 +80,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         {/* CTA */}
         <a href={whatsappUrl} target="_blank" rel="noreferrer" className="block w-full">
           <motion.button whileTap={{ scale: 0.97 }} className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-green-500 to-green-600 text-white font-bold text-[16px] shadow-[0_8px_20px_rgba(34,197,94,0.3)] hover:scale-[1.02] transition-transform flex items-center justify-center gap-2">
-            <MessageCircle className="w-5 h-5" /> تواصل مع البائع
+            <MessageCircle className="w-5 h-5" /> Contact Seller
           </motion.button>
         </a>
 
         {/* Related */}
         {related.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-text-primary text-[18px] font-bold mb-4">منتجات أخرى من نفس البائع</h2>
+            <h2 className="text-text-primary text-[18px] font-bold mb-4">Other products from this seller</h2>
             <div className="grid grid-cols-2 gap-4">
               {related.map((r) => (
                 <Link key={r.id} href={`/marketplace/products/${r.id}`}>
@@ -97,7 +97,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     </div>
                     <div className="p-3">
                       <h4 className="text-text-primary font-bold text-[13px] truncate">{r.title}</h4>
-                      <span className="text-terracotta font-bold text-[14px]">{r.price_mad} درهم</span>
+                      <span className="text-terracotta font-bold text-[14px]">{r.price_mad} MAD</span>
                     </div>
                   </div>
                 </Link>

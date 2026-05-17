@@ -8,17 +8,17 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { useProfile } from "@/lib/auth/profile-provider";
 
 const CRAFT_CATEGORIES = [
-  { value: "خشب", icon: "🪵", label: "خشب الثويا" },
-  { value: "فضة", icon: "💍", label: "فضة" },
-  { value: "نسيج", icon: "🧶", label: "نسيج" },
-  { value: "موسيقى", icon: "🎵", label: "موسيقى" },
-  { value: "تزلج", icon: "🏄", label: "تزلج شراعي" },
-  { value: "طعام", icon: "🍜", label: "طعام" },
+  { value: "wood", icon: "🪵", label: "Thuya Wood" },
+  { value: "silver", icon: "💍", label: "Silver" },
+  { value: "weaving", icon: "🧶", label: "Weaving" },
+  { value: "music", icon: "🎵", label: "Music" },
+  { value: "surf", icon: "🏄", label: "Kitesurf" },
+  { value: "food", icon: "🍜", label: "Food" },
 ];
 
 const INTERESTS = [
-  "🎨 فنون", "🏄 تزلج", "🍜 طعام", "🎵 موسيقى",
-  "🏛️ تاريخ", "📸 تصوير", "🛍️ تسوق", "🧘 استرخاء",
+  "🎨 Arts", "🏄 Surf", "🍜 Food", "🎵 Music",
+  "🏛️ History", "📸 Photography", "🛍️ Shopping", "🧘 Relaxation",
 ];
 
 export default function OnboardingPage() {
@@ -32,13 +32,13 @@ export default function OnboardingPage() {
     fullName: user?.fullName || "",
     username: user?.username || "",
     craft: "",
-    location: "الصويرة، المغرب",
+    location: "Essaouira, Morocco",
     bio: "",
     whatsapp: "",
     instagram: "",
     country: "",
     interests: [] as string[],
-    language: "AR",
+    language: "EN",
   });
   const [saving, setSaving] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
@@ -93,7 +93,7 @@ export default function OnboardingPage() {
         },
       });
 
-      // 2. Update Supabase profile (webhook created it, we update with onboarding data)
+      // 2. Update Supabase profile
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -103,7 +103,7 @@ export default function OnboardingPage() {
           is_artisan: role === "artisan",
           is_tourist: role === "tourist",
           craft_category: role === "artisan" ? formData.craft : null,
-          location: formData.location || "الصويرة، المغرب",
+          location: formData.location || "Essaouira, Morocco",
           bio: formData.bio || null,
           whatsapp: formData.whatsapp || null,
           instagram: formData.instagram || null,
@@ -127,10 +127,10 @@ export default function OnboardingPage() {
     }
   };
 
-  const totalSteps = role === "artisan" ? 3 : 3;
+  const totalSteps = 3;
 
   return (
-    <div className="min-h-screen bg-warm-white flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-warm-white flex items-center justify-center p-4" dir="ltr">
       <div className="w-full max-w-lg">
         {/* Progress */}
         <div className="flex gap-2 mb-8">
@@ -154,11 +154,11 @@ export default function OnboardingPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-text-primary text-[22px] font-bold mb-2 font-arabic text-center">
-                  أهلاً وسهلاً! 👋
+                <h2 className="text-text-primary text-[22px] font-bold mb-2 text-center">
+                  Welcome! 👋
                 </h2>
                 <p className="text-text-secondary text-center text-[15px] mb-8">
-                  أخبرنا عن نفسك
+                  Tell us about yourself
                 </p>
 
                 <div className="flex gap-4 mb-8">
@@ -171,8 +171,8 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <div className="text-[40px] mb-3">🌍</div>
-                    <div className="font-bold text-text-primary text-[16px]">أنا سائح</div>
-                    <div className="text-text-muted text-[13px] mt-1">أستكشف الصويرة</div>
+                    <div className="font-bold text-text-primary text-[16px]">I am a Tourist</div>
+                    <div className="text-text-muted text-[13px] mt-1">Exploring Essaouira</div>
                   </button>
                   <button
                     onClick={() => setRole("artisan")}
@@ -183,8 +183,8 @@ export default function OnboardingPage() {
                     }`}
                   >
                     <div className="text-[40px] mb-3">🎨</div>
-                    <div className="font-bold text-text-primary text-[16px]">أنا حرفي</div>
-                    <div className="text-text-muted text-[13px] mt-1">أعرض أعمالي</div>
+                    <div className="font-bold text-text-primary text-[16px]">I am an Artisan</div>
+                    <div className="text-text-muted text-[13px] mt-1">Showcasing my work</div>
                   </button>
                 </div>
 
@@ -192,7 +192,7 @@ export default function OnboardingPage() {
                   onClick={() => setStep(2)}
                   className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-terracotta to-saffron text-white font-bold text-[16px] shadow-[0_8px_20px_rgba(193,68,14,0.3)] hover:scale-[1.02] transition-transform active:scale-95"
                 >
-                  التالي ←
+                  Next →
                 </button>
               </motion.div>
             )}
@@ -206,22 +206,22 @@ export default function OnboardingPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="flex flex-col gap-4"
               >
-                <h2 className="text-text-primary text-[20px] font-bold mb-2 font-arabic">
-                  {role === "artisan" ? "🎨 معلومات الحرفي" : "🌍 معلومات السائح"}
+                <h2 className="text-text-primary text-[20px] font-bold mb-2">
+                  {role === "artisan" ? "🎨 Artisan Info" : "🌍 Tourist Info"}
                 </h2>
 
                 <div>
-                  <label className="text-text-secondary text-[14px] font-medium mb-2 block">الاسم الكامل</label>
+                  <label className="text-text-secondary text-[14px] font-medium mb-2 block">Full Name</label>
                   <input
                     value={formData.fullName}
                     onChange={(e) => updateField("fullName", e.target.value)}
                     className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-                    placeholder="الاسم الكامل"
+                    placeholder="Full Name"
                   />
                 </div>
 
                 <div>
-                  <label className="text-text-secondary text-[14px] font-medium mb-2 block">اسم المستخدم</label>
+                  <label className="text-text-secondary text-[14px] font-medium mb-2 block">Username</label>
                   <input
                     value={formData.username}
                     onChange={(e) => updateField("username", e.target.value)}
@@ -229,15 +229,15 @@ export default function OnboardingPage() {
                     placeholder="amine-craft"
                     dir="ltr"
                   />
-                  {usernameStatus === "checking" && <p className="text-text-muted text-[12px] mt-1">⏳ جاري التحقق...</p>}
-                  {usernameStatus === "available" && <p className="text-green-600 text-[12px] mt-1">✓ اسم المستخدم متاح</p>}
-                  {usernameStatus === "taken" && <p className="text-red-500 text-[12px] mt-1">✗ اسم المستخدم مستخدم بالفعل</p>}
+                  {usernameStatus === "checking" && <p className="text-text-muted text-[12px] mt-1">⏳ Checking...</p>}
+                  {usernameStatus === "available" && <p className="text-green-600 text-[12px] mt-1">✓ Username is available</p>}
+                  {usernameStatus === "taken" && <p className="text-red-500 text-[12px] mt-1">✗ Username is already taken</p>}
                 </div>
 
                 {role === "artisan" && (
                   <>
                     <div>
-                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">تخصصك</label>
+                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">Specialty</label>
                       <div className="flex flex-wrap gap-2">
                         {CRAFT_CATEGORIES.map((cat) => (
                           <button
@@ -255,12 +255,12 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                     <div>
-                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">الموقع</label>
+                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">Location</label>
                       <input
                         value={formData.location}
                         onChange={(e) => updateField("location", e.target.value)}
                         className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-                        placeholder="المدينة القديمة، الصويرة"
+                        placeholder="Old Medina, Essaouira"
                       />
                     </div>
                   </>
@@ -269,16 +269,16 @@ export default function OnboardingPage() {
                 {role === "tourist" && (
                   <>
                     <div>
-                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">بلدك</label>
+                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">Your Country</label>
                       <input
                         value={formData.country}
                         onChange={(e) => updateField("country", e.target.value)}
                         className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px]"
-                        placeholder="🇫🇷 فرنسا"
+                        placeholder="🇫🇷 France"
                       />
                     </div>
                     <div>
-                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">اهتماماتك</label>
+                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">Interests</label>
                       <div className="flex flex-wrap gap-2">
                         {INTERESTS.map((interest) => (
                           <button
@@ -300,13 +300,13 @@ export default function OnboardingPage() {
 
                 <div className="flex gap-3 mt-4">
                   <button onClick={() => setStep(1)} className="flex-1 h-[48px] rounded-[14px] border border-warm-border text-text-secondary font-medium hover:bg-warm-sand transition-colors">
-                    → رجوع
+                    ← Back
                   </button>
                   <button
                     onClick={() => setStep(3)}
                     className="flex-1 h-[48px] rounded-[14px] bg-gradient-to-r from-terracotta to-saffron text-white font-bold shadow-[0_8px_20px_rgba(193,68,14,0.3)] hover:scale-[1.02] transition-transform"
                   >
-                    التالي ←
+                    Next →
                   </button>
                 </div>
               </motion.div>
@@ -321,19 +321,19 @@ export default function OnboardingPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="flex flex-col gap-4"
               >
-                <h2 className="text-text-primary text-[20px] font-bold mb-2 font-arabic">
-                  ✨ اللمسات الأخيرة
+                <h2 className="text-text-primary text-[20px] font-bold mb-2">
+                  ✨ Final Touches
                 </h2>
 
                 <div>
                   <label className="text-text-secondary text-[14px] font-medium mb-2 block">
-                    نبذة قصيرة <span className="text-text-muted">({formData.bio.length}/200)</span>
+                    Short Bio <span className="text-text-muted">({formData.bio.length}/200)</span>
                   </label>
                   <textarea
                     value={formData.bio}
                     onChange={(e) => updateField("bio", e.target.value.slice(0, 200))}
                     className="w-full bg-warm-sand border border-warm-border rounded-xl px-4 py-3 text-text-primary focus:outline-none focus:border-ocean/50 focus:ring-2 focus:ring-ocean/10 text-[15px] resize-none h-24"
-                    placeholder="حكي لنا عن نفسك..."
+                    placeholder="Tell us about yourself..."
                     maxLength={200}
                   />
                 </div>
@@ -341,7 +341,7 @@ export default function OnboardingPage() {
                 {role === "artisan" && (
                   <>
                     <div>
-                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">واتساب (اختياري)</label>
+                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">WhatsApp (Optional)</label>
                       <input
                         value={formData.whatsapp}
                         onChange={(e) => updateField("whatsapp", e.target.value)}
@@ -351,7 +351,7 @@ export default function OnboardingPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">انستغرام (اختياري)</label>
+                      <label className="text-text-secondary text-[14px] font-medium mb-2 block">Instagram (Optional)</label>
                       <input
                         value={formData.instagram}
                         onChange={(e) => updateField("instagram", e.target.value)}
@@ -365,7 +365,7 @@ export default function OnboardingPage() {
 
                 <div className="flex gap-3 mt-4">
                   <button onClick={() => setStep(2)} className="flex-1 h-[48px] rounded-[14px] border border-warm-border text-text-secondary font-medium hover:bg-warm-sand transition-colors">
-                    → رجوع
+                    ← Back
                   </button>
                   <button
                     onClick={handleSubmit}
@@ -375,7 +375,7 @@ export default function OnboardingPage() {
                     {saving ? (
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" />
                     ) : (
-                      "🚀 ابدأ الاستكشاف"
+                      "🚀 Start Exploring"
                     )}
                   </button>
                 </div>

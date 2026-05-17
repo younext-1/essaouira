@@ -116,7 +116,7 @@ export function NarrowSidebar() {
                 <div className="w-10 h-10 rounded-full bg-warm-sand border border-warm-border flex items-center justify-center">
                   <Compass className="w-5 h-5" />
                 </div>
-                <span className="text-sm font-medium">تسجيل الدخول</span>
+                <span className="text-sm font-medium">Sign In</span>
               </button>
             </SignInButton>
           )}

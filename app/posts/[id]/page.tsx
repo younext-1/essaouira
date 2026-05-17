@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Heart, Bookmark, Share2, MapPin, ArrowRight, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Heart, Bookmark, Share2, MapPin, ArrowLeft, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { GradientAvatar } from "@/components/ui/GradientAvatar";
 import { createClient } from "@/lib/supabase/client";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -100,11 +100,11 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   if (!post) {
     return (
-      <div className="flex-1 flex items-center justify-center p-8 text-center" dir="rtl">
+      <div className="flex-1 flex items-center justify-center p-8 text-center" dir="ltr">
         <div>
           <div className="text-[48px] mb-4">😕</div>
-          <h2 className="text-text-primary text-[20px] font-bold mb-2">المنشور غير موجود</h2>
-          <Link href="/explore" className="text-ocean text-[14px] font-medium hover:underline">العودة للاستكشاف</Link>
+          <h2 className="text-text-primary text-[20px] font-bold mb-2">Post not found</h2>
+          <Link href="/explore" className="text-ocean text-[14px] font-medium hover:underline">Back to Explore</Link>
         </div>
       </div>
     );
@@ -112,14 +112,14 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   const timeAgo = (() => {
     const mins = Math.floor((Date.now() - new Date(post.created_at).getTime()) / 60000);
-    if (mins < 60) return `منذ ${mins} دقيقة`;
+    if (mins < 60) return `${mins}m ago`;
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `منذ ${hrs} ساعة`;
-    return `منذ ${Math.floor(hrs / 24)} يوم`;
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
   })();
 
   return (
-    <div className="flex-1 w-full max-w-[800px] mx-auto pb-24" dir="rtl">
+    <div className="flex-1 w-full max-w-[800px] mx-auto pb-24" dir="ltr">
 
       {/* Image gallery */}
       <div className="relative w-full h-[300px] md:h-[450px] bg-warm-sand">
@@ -128,8 +128,8 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
             <Image src={images[currentImg]} alt={post.title || ""} fill className="object-cover" />
             {images.length > 1 && (
               <>
-                <button onClick={() => setCurrentImg((c) => (c > 0 ? c - 1 : images.length - 1))} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10"><ChevronRight className="w-5 h-5" /></button>
-                <button onClick={() => setCurrentImg((c) => (c < images.length - 1 ? c + 1 : 0))} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10"><ChevronLeft className="w-5 h-5" /></button>
+                <button onClick={() => setCurrentImg((c) => (c > 0 ? c - 1 : images.length - 1))} className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10"><ChevronLeft className="w-5 h-5" /></button>
+                <button onClick={() => setCurrentImg((c) => (c < images.length - 1 ? c + 1 : 0))} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10"><ChevronRight className="w-5 h-5" /></button>
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                   {images.map((_, i) => (<div key={i} className={`w-2 h-2 rounded-full transition-colors ${i === currentImg ? "bg-white" : "bg-white/40"}`} />))}
                 </div>
@@ -139,8 +139,8 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
         ) : (
           <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-16 h-16 text-text-muted" /></div>
         )}
-        <Link href="/explore" className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10">
-          <ArrowRight className="w-5 h-5" />
+        <Link href="/explore" className="absolute top-4 left-4 w-10 h-10 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center z-10">
+          <ArrowLeft className="w-5 h-5" />
         </Link>
       </div>
 
@@ -202,7 +202,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
               </h3>
               <p className="text-text-muted text-[13px]">{post.author_location}</p>
             </div>
-            <span className="text-ocean text-[13px] font-medium shrink-0">عرض الملف ←</span>
+            <span className="text-ocean text-[13px] font-medium shrink-0">View Profile →</span>
           </div>
         </Link>
       </div>

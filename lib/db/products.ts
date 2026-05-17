@@ -9,7 +9,7 @@ export async function getProducts(category?: string): Promise<Product[]> {
     .eq('in_stock', true)
     .order('created_at', { ascending: false })
 
-  if (category && category !== 'الكل') {
+  if (category && category !== 'الكل' && category !== 'All') {
     query = query.eq('category', category)
   }
 

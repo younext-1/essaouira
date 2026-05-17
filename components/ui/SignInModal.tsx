@@ -24,27 +24,27 @@ export function SignInModal() {
             transition={{ type: "spring", bounce: 0.3 }}
             className="bg-white w-full max-w-sm rounded-[24px] p-8 shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-warm-border text-center"
             onClick={(e) => e.stopPropagation()}
-            dir="rtl"
+            dir="ltr"
           >
             <div className="text-[48px] mb-4">🌊</div>
 
-            <h2 className="text-text-primary text-[22px] font-bold mb-2 font-arabic">
-              انضم إلى موكادور كونيكت
+            <h2 className="text-text-primary text-[22px] font-bold mb-2">
+              Join Mogador Connect
             </h2>
             <p className="text-text-secondary text-[15px] mb-8 leading-relaxed">
-              سجل دخولك للتفاعل مع الحرفيين والمجتمع
+              Sign in to interact with artisans and the community
             </p>
 
             <div className="flex flex-col gap-3">
               <Link href="/sign-in" onClick={close}>
                 <button className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-terracotta to-saffron text-white font-bold text-[16px] shadow-[0_8px_20px_rgba(193,68,14,0.3)] hover:scale-[1.02] transition-transform active:scale-95">
-                  تسجيل الدخول
+                  Sign In
                 </button>
               </Link>
 
               <Link href="/sign-up" onClick={close}>
                 <button className="w-full h-[48px] rounded-[14px] border-2 border-ocean text-ocean font-bold text-[15px] hover:bg-ocean hover:text-white transition-colors">
-                  إنشاء حساب
+                  Create Account
                 </button>
               </Link>
 
@@ -52,7 +52,7 @@ export function SignInModal() {
                 onClick={close}
                 className="text-text-muted text-[14px] hover:text-text-secondary transition-colors mt-2"
               >
-                متابعة كزائر
+                Continue as Guest
               </button>
             </div>
           </motion.div>

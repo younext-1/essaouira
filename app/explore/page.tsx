@@ -100,7 +100,7 @@ export default function ExplorePage() {
 
   const { isSignedIn } = useUser();
   const { profile } = useProfile();
-  const authClient = useSupabase(); // Authenticated client for writes
+  const authClient = useSupabase();
   const user = isSignedIn ? profile : null;
   const isArtisan = profile?.role === "artisan";
 
@@ -220,7 +220,7 @@ export default function ExplorePage() {
   }, [activeFilter]);
 
   return (
-    <div className="w-full min-h-full relative overflow-x-hidden" dir="rtl">
+    <div className="w-full min-h-full relative overflow-x-hidden" dir="ltr">
       <motion.div className="absolute top-0 left-0 w-full flex justify-center items-center pointer-events-none z-10" style={{ y: useMotionValue(-60) }} animate={isRefreshing ? { y: 20 } : { y: -60 }}>
         <div className="w-10 h-10 bg-white border border-warm-border rounded-full flex items-center justify-center shadow-lg">
           <Sparkles className={`w-5 h-5 text-ocean ${isRefreshing ? "animate-spin" : ""}`} />
@@ -244,7 +244,7 @@ export default function ExplorePage() {
         {/* Featured */}
         {featured.length > 0 && (
           <div className="mb-6 md:mb-8 w-full">
-            <h2 className="text-[16px] font-bold mb-3 md:mb-4 flex items-center gap-2 px-4 md:px-0"><GradientText>⭐ مميز</GradientText></h2>
+            <h2 className="text-[16px] font-bold mb-3 md:mb-4 flex items-center gap-2 px-4 md:px-0"><GradientText>⭐ Featured</GradientText></h2>
             <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-2 snap-x snap-mandatory px-4 md:px-0">
               {featured.map((item, i) => (
                 <Link key={item.id} href={`/posts/${item.id}`}>
@@ -252,7 +252,7 @@ export default function ExplorePage() {
                     {item.image && <Image src={item.image} alt={item.title} fill className="object-cover transition-transform duration-400 group-hover:scale-[1.05]" />}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                     <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md border border-white/15 text-white text-[10px] md:text-[12px] font-medium px-2 py-0.5 md:px-3 md:py-1 rounded-[20px]">{item.category}</div>
-                    <h3 className="absolute bottom-3 right-4 text-white font-bold text-[13px] md:text-[15px]">{item.title}</h3>
+                    <h3 className="absolute bottom-3 left-4 text-white font-bold text-[13px] md:text-[15px]">{item.title}</h3>
                   </motion.div>
                 </Link>
               ))}
@@ -288,7 +288,7 @@ export default function ExplorePage() {
           {isLoading ? (
             <><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
           ) : posts.length === 0 ? (
-            <div className="col-span-full text-center py-20"><p className="text-text-muted text-[16px]">لا توجد منشورات بعد</p></div>
+            <div className="col-span-full text-center py-20"><p className="text-text-muted text-[16px]">No posts yet</p></div>
           ) : (
             posts.map((post, i) => (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }} key={post.id}>
@@ -307,7 +307,7 @@ export default function ExplorePage() {
                       </div>
                     </Link>
                     <button onClick={(e) => { e.stopPropagation(); toggleFollow(post.id); }} className={`border-[1.5px] border-ocean rounded-[20px] px-3 md:px-[14px] py-1.5 md:py-[6px] text-[12px] md:text-[13px] font-medium transition-colors shrink-0 ${post.following ? "bg-ocean text-white" : "text-ocean hover:bg-ocean hover:text-white"}`}>
-                      {post.following ? "يتابع ✓" : "يتبع"}
+                      {post.following ? "Following ✓" : "Follow"}
                     </button>
                   </div>
 
@@ -315,7 +315,7 @@ export default function ExplorePage() {
                   <Link href={`/posts/${post.id}`}>
                     <div className="relative w-full h-[240px] md:h-auto md:aspect-square bg-warm-sand overflow-hidden group cursor-pointer">
                       <ImageGallery images={post.images} alt={post.title || ""} />
-                      <div className="absolute top-4 right-4 bg-white/92 backdrop-blur-md border border-terracotta/20 text-terracotta text-[12px] font-medium px-[12px] py-[4px] rounded-[20px] z-10 pointer-events-none shadow-sm">{post.category}</div>
+                      <div className="absolute top-4 left-4 bg-white/92 backdrop-blur-md border border-terracotta/20 text-terracotta text-[12px] font-medium px-[12px] py-[4px] rounded-[20px] z-10 pointer-events-none shadow-sm">{post.category}</div>
                       <div className="absolute bottom-0 left-0 right-0 h-[60px] bg-gradient-to-t from-black/70 to-transparent flex items-end p-4 pointer-events-none z-10">
                         <div className="flex items-center gap-1.5 text-white text-[12px] font-medium">⭐ 4.9</div>
                       </div>
