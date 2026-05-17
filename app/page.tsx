@@ -94,8 +94,8 @@ const categoryMap: Record<string, string> = {
   "All": "all",
   "🎨 Artisans": "artisan",
   "🎵 Music": "music",
-  "🏄 Surf": "surf",
-  "🍜 Foods": "food",
+  "🏄 Surfs": "surf",
+  "🍜 Food": "food",
   "🏛️ Culture": "culture",
 };
 
