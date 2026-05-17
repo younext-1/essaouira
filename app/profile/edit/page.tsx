@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useProfile } from "@/lib/auth/profile-provider";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Save, User, FileText, Briefcase } from "lucide-react";
+import { Save, User, FileText, Briefcase, Code, Upload, Eye, EyeOff } from "lucide-react";
 
-type Tab = "basic" | "markdown" | "services";
+type Tab = "basic" | "markdown" | "services" | "customhtml";
 
 export default function EditProfilePage() {
   const { user: clerkUser } = useUser();
@@ -34,6 +34,12 @@ export default function EditProfilePage() {
   // Markdown
   const [profileMd, setProfileMd] = useState("");
 
+  // Custom HTML
+  const [customHtml, setCustomHtml] = useState("");
+  const [customHtmlEnabled, setCustomHtmlEnabled] = useState(false);
+  const [customHtmlFilename, setCustomHtmlFilename] = useState("");
+  const htmlInputRef = useRef<HTMLInputElement>(null);
+
   // Populate form when profile loads
   useEffect(() => {
     if (profile) {
@@ -47,6 +53,9 @@ export default function EditProfilePage() {
       setFacebook(profile.facebook || "");
       setTiktok(profile.tiktok || "");
       setProfileMd(profile.profile_md || "");
+      setCustomHtml(profile.custom_html || "");
+      setCustomHtmlEnabled(profile.custom_html_enabled || false);
+      setCustomHtmlFilename(profile.custom_html_filename || "");
     }
   }, [profile]);
 
@@ -62,7 +71,37 @@ export default function EditProfilePage() {
     { key: "basic" as Tab, label: "المعلومات الأساسية", icon: User },
     { key: "markdown" as Tab, label: "ملف MD", icon: FileText },
     { key: "services" as Tab, label: "الخدمات والأعمال", icon: Briefcase },
+    { key: "customhtml" as Tab, label: "🎨 تخصيص الصفحة", icon: Code },
   ];
+
+  const handleHtmlUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const content = await file.text();
+    setCustomHtml(content);
+    setCustomHtmlFilename(file.name);
+    setCustomHtmlEnabled(true);
+  };
+
+  const saveCustomHtml = async () => {
+    setSaving(true);
+    try {
+      await supabase
+        .from("profiles")
+        .update({
+          custom_html: customHtml,
+          custom_html_enabled: customHtmlEnabled,
+          custom_html_filename: customHtmlFilename || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("clerk_id", clerkUser!.id);
+      showSuccess();
+    } catch (err) {
+      console.error("Save error:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const showSuccess = () => {
     setSuccess(true);
@@ -299,12 +338,47 @@ export default function EditProfilePage() {
         {activeTab === "services" && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <Briefcase className="w-12 h-12 text-text-muted mb-4" />
-            <h3 className="text-text-primary text-[18px] font-bold mb-2 font-arabic">
-              إدارة الخدمات والأعمال
-            </h3>
-            <p className="text-text-secondary text-[14px] max-w-sm">
-              قريباً: إضافة وتعديل الخدمات وعرض الأعمال مباشرة من هنا
-            </p>
+            <h3 className="text-text-primary text-[18px] font-bold mb-2 font-arabic">إدارة الخدمات والأعمال</h3>
+            <p className="text-text-secondary text-[14px] max-w-sm">قريباً: إضافة وتعديل الخدمات وعرض الأعمال مباشرة من هنا</p>
+          </div>
+        )}
+
+        {/* TAB 4: Custom HTML */}
+        {activeTab === "customhtml" && (
+          <div className="flex flex-col gap-5">
+            <p className="text-text-secondary text-[14px]">ارفع ملف HTML لتخصيص الجزء السفلي من صفحة بروفيلك</p>
+
+            {/* Toggle */}
+            <div className="flex items-center justify-between bg-warm-sand rounded-xl px-4 py-3 border border-warm-border">
+              <span className="text-text-primary text-[14px] font-medium">تفعيل التخصيص</span>
+              <button onClick={() => setCustomHtmlEnabled(!customHtmlEnabled)} className={`w-12 h-7 rounded-full transition-colors relative ${customHtmlEnabled ? "bg-ocean" : "bg-gray-300"}`}>
+                <div className={`w-5 h-5 rounded-full bg-white shadow absolute top-1 transition-all ${customHtmlEnabled ? "right-1" : "right-6"}`} />
+              </button>
+            </div>
+
+            {/* Upload */}
+            <div onClick={() => htmlInputRef.current?.click()} className="border-2 border-dashed border-warm-border rounded-xl p-8 text-center cursor-pointer hover:border-ocean/50 transition-colors">
+              <Upload className="w-10 h-10 text-text-muted mx-auto mb-3" />
+              <p className="text-text-primary text-[14px] font-medium mb-1">اضغط لرفع ملف HTML</p>
+              <p className="text-text-muted text-[12px]">يدعم: .html, .htm</p>
+              {customHtmlFilename && <p className="text-ocean text-[13px] mt-2">📄 {customHtmlFilename}</p>}
+            </div>
+            <input ref={htmlInputRef} type="file" accept=".html,.htm" hidden onChange={handleHtmlUpload} />
+
+            {/* Preview */}
+            {customHtml && (
+              <div>
+                <h4 className="text-text-primary text-[14px] font-medium mb-2 flex items-center gap-2"><Eye className="w-4 h-4" /> معاينة</h4>
+                <div className="rounded-xl overflow-hidden border border-warm-border">
+                  <iframe srcDoc={customHtml} className="w-full min-h-[400px]" sandbox="allow-scripts" title="Custom HTML Preview" />
+                </div>
+              </div>
+            )}
+
+            <motion.button whileTap={{ scale: 0.97 }} onClick={saveCustomHtml} disabled={saving}
+              className="w-full h-[52px] rounded-[14px] bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-[16px] shadow-[0_8px_20px_rgba(168,85,247,0.3)] hover:scale-[1.02] transition-transform disabled:opacity-60">
+              {saving ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto" /> : <span className="flex items-center justify-center gap-2"><Save className="w-5 h-5" /> حفظ التخصيص</span>}
+            </motion.button>
           </div>
         )}
       </div>

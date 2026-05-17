@@ -410,6 +410,32 @@ export default function ArtisanProfilePage({ params }: { params: Promise<{ id: s
           )}
         </section>
 
+        {/* Custom HTML Section */}
+        {profile.custom_html_enabled && profile.custom_html && (
+          <section className="mb-12 px-4 md:px-8">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <h2 className="text-text-primary text-[18px] font-display font-bold mb-2 flex items-center">صفحتي المخصصة</h2>
+              <p className="text-text-muted text-[12px] mb-4">✨ صممها {profile.full_name}</p>
+              <div className="rounded-2xl overflow-hidden border border-warm-border">
+                <iframe
+                  srcDoc={profile.custom_html}
+                  className="w-full min-h-[400px]"
+                  sandbox="allow-scripts allow-popups"
+                  onLoad={(e) => {
+                    try {
+                      const iframe = e.target as HTMLIFrameElement;
+                      if (iframe.contentWindow) {
+                        iframe.style.height = iframe.contentWindow.document.body.scrollHeight + "px";
+                      }
+                    } catch {}
+                  }}
+                  title={`${profile.full_name} custom profile`}
+                />
+              </div>
+            </motion.div>
+          </section>
+        )}
+
         <div className="h-10"></div>
       </div>
 

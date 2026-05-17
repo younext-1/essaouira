@@ -9,7 +9,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { name: "اكتشف", href: "/", icon: Compass },
+    { name: "اكتشف", href: "/explore", icon: Compass },
     { name: "السوق", href: "/marketplace", icon: ShoppingBag },
     { name: "المرشد", href: "/ai-guide", icon: Bot },
     { name: "ملفي", href: "/profile", icon: User },

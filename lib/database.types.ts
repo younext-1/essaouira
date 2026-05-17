@@ -22,6 +22,9 @@ export interface Profile {
   instagram: string | null
   facebook: string | null
   tiktok: string | null
+  custom_html: string | null
+  custom_html_enabled: boolean
+  custom_html_filename: string | null
   created_at: string
   updated_at: string
 }
@@ -67,6 +70,7 @@ export interface Post {
   category: 'artisan' | 'music' | 'surf' | 'food' | 'culture' | 'other' | null
   location: string | null
   is_featured: boolean
+  is_published: boolean
   view_count: number
   created_at: string
   updated_at: string
@@ -179,6 +183,7 @@ export interface PostWithCounts {
   avatar_url: string | null
   verified: boolean
   author_location: string | null
+  author_whatsapp: string | null
   likes_count: number
   bookmarks_count: number
   tags: string[] | null

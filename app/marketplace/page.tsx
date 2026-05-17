@@ -6,8 +6,9 @@ import { PillFilter } from "@/components/ui/PillFilter";
 import { DarkInput } from "@/components/ui/DarkInput";
 import { GradientButton } from "@/components/ui/GradientButton";
 import { GradientText } from "@/components/ui/GradientText";
-import { Search, ShoppingCart, Bookmark } from "lucide-react";
+import { Search, ShoppingCart, Bookmark, Plus } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { useUser } from "@clerk/nextjs";
@@ -133,36 +134,37 @@ export default function MarketplacePage() {
           </div>
         ) : (
           filteredProducts.map((product, i) => (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              key={product.id}
-            >
-              <DarkCard className="h-full flex flex-col">
-                <div className="relative w-full aspect-[4/3] bg-warm-sand">
-                  {product.image_url && (
-                    <Image src={product.image_url} alt={product.title} fill className="object-cover rounded-t-[16px]" />
-                  )}
-                  <button 
-                    onClick={() => toggleSave(product.id)}
-                    className="absolute top-3 left-3 bg-white/80 backdrop-blur-md p-2 rounded-full border border-warm-border/50"
-                  >
-                    <Bookmark className={`w-4 h-4 ${product.saved ? "fill-terracotta text-terracotta" : "text-text-primary"}`} />
-                  </button>
-                </div>
-                
-                <div className="p-4 flex flex-col flex-1">
-                  <h3 className="text-text-primary font-bold text-[15px] mb-1 leading-tight line-clamp-2">{product.title}</h3>
-                  <p className="text-text-muted text-[13px] mb-4">{product.description || ""}</p>
-                  
-                  <div className="mt-auto">
-                    <GradientText className="text-[18px] font-bold block mb-4">{product.price_mad} درهم</GradientText>
-                    <GradientButton className="w-full h-[40px] text-[14px]">أضف للسلة</GradientButton>
+            <Link key={product.id} href={`/marketplace/products/${product.id}`}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <DarkCard className="h-full flex flex-col">
+                  <div className="relative w-full aspect-[4/3] bg-warm-sand">
+                    {product.image_url && (
+                      <Image src={product.image_url} alt={product.title} fill className="object-cover rounded-t-[16px]" />
+                    )}
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleSave(product.id); }}
+                      className="absolute top-3 left-3 bg-white/80 backdrop-blur-md p-2 rounded-full border border-warm-border/50"
+                    >
+                      <Bookmark className={`w-4 h-4 ${product.saved ? "fill-terracotta text-terracotta" : "text-text-primary"}`} />
+                    </button>
                   </div>
-                </div>
-              </DarkCard>
-            </motion.div>
+                  
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-text-primary font-bold text-[15px] mb-1 leading-tight line-clamp-2">{product.title}</h3>
+                    <p className="text-text-muted text-[13px] mb-4">{product.description || ""}</p>
+                    
+                    <div className="mt-auto">
+                      <GradientText className="text-[18px] font-bold block mb-4">{product.price_mad} درهم</GradientText>
+                      <GradientButton className="w-full h-[40px] text-[14px]">عرض المنتج</GradientButton>
+                    </div>
+                  </div>
+                </DarkCard>
+              </motion.div>
+            </Link>
           ))
         )}
       </div>
@@ -177,6 +179,13 @@ export default function MarketplacePage() {
           0
         </div>
       </motion.button>
+
+      {/* Floating Sell Button (artisan only) */}
+      {user?.role === "artisan" && (
+        <Link href="/marketplace/sell" className="fixed bottom-24 right-4 md:bottom-8 md:right-8 w-14 h-14 rounded-full bg-gradient-to-br from-terracotta to-saffron text-white shadow-[0_8px_24px_rgba(193,68,14,0.4)] flex items-center justify-center z-40 hover:scale-110 transition-transform">
+          <Plus className="w-6 h-6" />
+        </Link>
+      )}
     </div>
   );
 }

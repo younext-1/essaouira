@@ -112,7 +112,7 @@ export default function NewPostPage() {
           .insert(tags.map((tag) => ({ post_id: post.id, tag })));
       }
 
-      router.push("/");
+      router.push("/explore");
       router.refresh();
     } catch (err) {
       console.error("Post creation error:", err);

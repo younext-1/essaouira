@@ -14,7 +14,7 @@ export function NarrowSidebar() {
   const { profile } = useProfile();
 
   const navItems = [
-    { name: "Explore", path: "/", icon: Compass },
+    { name: "Explore", path: "/explore", icon: Compass },
     { name: "Marketplace", path: "/marketplace", icon: ShoppingBag },
     { name: "AI Guide", path: "/ai-guide", icon: MessageSquare },
   ];
