@@ -43,7 +43,7 @@ export default function LandingPage() {
               <Compass className="w-5 h-5" /> استكشف الآن
             </Link>
             <Link href="/book" className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 text-white font-bold text-[15px] px-8 py-3.5 rounded-[14px] hover:bg-white/25 transition-colors">
-              <Calendar className="w-5 h-5" /> احجز مرشداً
+              <Calendar className="w-5 h-5" /> احجز مرشدا
             </Link>
           </div>
         </motion.div>
