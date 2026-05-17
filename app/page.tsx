@@ -92,7 +92,7 @@ function SkeletonCard() {
 // Category filter mapping (Arabic label → DB category)
 const categoryMap: Record<string, string> = {
   "All": "all",
-  "🎨 Artisans": "artisan",
+  "🎨 Artisanss": "artisan",
   "🎵 Music": "music",
   "🏄 Surf": "surf",
   "🍜 Food": "food",
