@@ -1,77 +1,182 @@
-import Image from "next/image";
-import { Store, Tag } from "lucide-react";
+"use client";
 
-export default function Marketplace() {
-  const products = [
-    {
-      id: 1,
-      title: "Hand-carved Thuya Box",
-      price: "350 MAD",
-      seller: "Amine's Craft Shop",
-      image: "https://images.unsplash.com/photo-1618220179428-22790b46a013?q=80&w=600&auto=format&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Argan Oil (Pure, 100ml)",
-      price: "120 MAD",
-      seller: "Cooperative Tighanimine",
-      image: "https://images.unsplash.com/photo-1626248695509-f831923e4297?q=80&w=600&auto=format&fit=crop"
-    },
-    {
-      id: 3,
-      title: "Beginner Kite Board",
-      price: "1200 MAD",
-      seller: "Mogador Surf School",
-      image: "https://images.unsplash.com/photo-1544108866-932b1ff979ee?q=80&w=600&auto=format&fit=crop"
-    },
-    {
-      id: 4,
-      title: "Traditional Gnaoua Guembri",
-      price: "850 MAD",
-      seller: "Medina Music Shop",
-      image: "https://images.unsplash.com/photo-1595069906974-f98b9e691d6f?q=80&w=600&auto=format&fit=crop"
+import { useState, useEffect } from "react";
+import { DarkCard } from "@/components/ui/DarkCard";
+import { PillFilter } from "@/components/ui/PillFilter";
+import { DarkInput } from "@/components/ui/DarkInput";
+import { GradientButton } from "@/components/ui/GradientButton";
+import { GradientText } from "@/components/ui/GradientText";
+import { Search, ShoppingCart, Bookmark } from "lucide-react";
+import Image from "next/image";
+import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
+import { useUser } from "@clerk/nextjs";
+import { useProfile } from "@/lib/auth/profile-provider";
+import type { Product } from "@/lib/database.types";
+
+interface LocalProduct extends Product {
+  saved: boolean;
+}
+
+export default function MarketplacePage() {
+  const [activeCategory, setActiveCategory] = useState("الكل");
+  const categories = ["الكل", "خشب الثويا", "فضة", "نسيج", "توابل", "فخار"];
+  const [products, setProducts] = useState<LocalProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const { isSignedIn } = useUser();
+  const { profile } = useProfile();
+  const user = isSignedIn ? profile : null;
+
+  useEffect(() => {
+    async function fetchProducts() {
+      setLoading(true);
+      const supabase = createClient();
+
+      let query = supabase
+        .from("products")
+        .select("*")
+        .eq("in_stock", true)
+        .order("created_at", { ascending: false });
+
+      if (activeCategory !== "الكل") {
+        query = query.eq("category", activeCategory);
+      }
+
+      const { data } = await query;
+
+      // Get user's bookmarked products (using bookmarks table with product_id pattern)
+      let savedIds: string[] = [];
+      if (user) {
+        const { data: bookmarks } = await supabase
+          .from("bookmarks")
+          .select("post_id")
+          .eq("user_id", user.id);
+        savedIds = bookmarks?.map((b: { post_id: string }) => b.post_id) ?? [];
+      }
+
+      setProducts(
+        (data as Product[] ?? []).map((p) => ({
+          ...p,
+          saved: savedIds.includes(p.id),
+        }))
+      );
+      setLoading(false);
     }
-  ];
+
+    fetchProducts();
+  }, [activeCategory, user]);
+
+  const toggleSave = async (productId: string) => {
+    setProducts(prev =>
+      prev.map(p => p.id === productId ? { ...p, saved: !p.saved } : p)
+    );
+
+    if (!user) return;
+    const supabase = createClient();
+    const product = products.find(p => p.id === productId);
+    if (product?.saved) {
+      await supabase.from("bookmarks").delete().eq("post_id", productId).eq("user_id", user.id);
+    } else {
+      await supabase.from("bookmarks").insert({ post_id: productId, user_id: user.id });
+    }
+  };
+
+  const filteredProducts = searchQuery
+    ? products.filter(p => p.title.includes(searchQuery) || p.description?.includes(searchQuery))
+    : products;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-3xl font-display-xl font-bold text-[#1a1a2e] mb-2 flex items-center gap-3">
-          <Store className="w-8 h-8 text-blue-500" />
-          Marketplace
-        </h2>
-        <p className="text-[#1a1a2e]/70">Support local artisans and businesses directly from Mogador.</p>
+    <div className="w-full flex flex-col p-4 max-w-6xl mx-auto pb-32" dir="rtl">
+      
+      {/* Search */}
+      <div className="relative mb-6">
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-text-muted">
+          <Search className="w-5 h-5" />
+        </div>
+        <DarkInput 
+          placeholder="ابحث عن منتجات..." 
+          className="w-full pl-4 pr-12"
+          value={searchQuery}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+        />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-gray-100 flex flex-col group">
-            <div className="relative aspect-square bg-gray-100 overflow-hidden">
-              <Image 
-                src={product.image} 
-                alt={product.title} 
-                fill 
-                className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-              />
-            </div>
-            <div className="p-4 flex flex-col flex-1">
-              <h3 className="font-bold text-[#1a1a2e] mb-1 line-clamp-1">{product.title}</h3>
-              <p className="text-sm text-[#1a1a2e]/60 mb-4">{product.seller}</p>
-              
-              <div className="mt-auto flex items-center justify-between">
-                <span className="font-semibold text-blue-700 flex items-center gap-1.5">
-                  <Tag className="w-4 h-4" />
-                  {product.price}
-                </span>
-                <button className="px-4 py-1.5 bg-[#1a1a2e] text-white text-sm font-medium rounded-full hover:bg-blue-600 transition-colors">
-                  Buy
-                </button>
-              </div>
-            </div>
-          </div>
+      {/* Categories */}
+      <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-6 w-full border-b border-warm-border mb-6">
+        {categories.map((cat) => (
+          <PillFilter 
+            key={cat} 
+            label={cat} 
+            isActive={activeCategory === cat} 
+            onClick={() => setActiveCategory(cat)} 
+          />
         ))}
       </div>
+
+      {/* Products Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+        {loading ? (
+          [1,2,3].map(i => (
+            <div key={i} className="bg-white rounded-[16px] border border-warm-border overflow-hidden">
+              <div className="w-full aspect-[4/3] animate-shimmer" />
+              <div className="p-4 space-y-2">
+                <div className="w-3/4 h-4 animate-shimmer rounded-full" />
+                <div className="w-1/2 h-3 animate-shimmer rounded-full" />
+                <div className="w-1/3 h-5 animate-shimmer rounded-full mt-4" />
+              </div>
+            </div>
+          ))
+        ) : filteredProducts.length === 0 ? (
+          <div className="col-span-full text-center py-20">
+            <p className="text-text-muted text-[16px]">لا توجد منتجات</p>
+          </div>
+        ) : (
+          filteredProducts.map((product, i) => (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.1 }}
+              key={product.id}
+            >
+              <DarkCard className="h-full flex flex-col">
+                <div className="relative w-full aspect-[4/3] bg-warm-sand">
+                  {product.image_url && (
+                    <Image src={product.image_url} alt={product.title} fill className="object-cover rounded-t-[16px]" />
+                  )}
+                  <button 
+                    onClick={() => toggleSave(product.id)}
+                    className="absolute top-3 left-3 bg-white/80 backdrop-blur-md p-2 rounded-full border border-warm-border/50"
+                  >
+                    <Bookmark className={`w-4 h-4 ${product.saved ? "fill-terracotta text-terracotta" : "text-text-primary"}`} />
+                  </button>
+                </div>
+                
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="text-text-primary font-bold text-[15px] mb-1 leading-tight line-clamp-2">{product.title}</h3>
+                  <p className="text-text-muted text-[13px] mb-4">{product.description || ""}</p>
+                  
+                  <div className="mt-auto">
+                    <GradientText className="text-[18px] font-bold block mb-4">{product.price_mad} درهم</GradientText>
+                    <GradientButton className="w-full h-[40px] text-[14px]">أضف للسلة</GradientButton>
+                  </div>
+                </div>
+              </DarkCard>
+            </motion.div>
+          ))
+        )}
+      </div>
+
+      {/* Floating Cart */}
+      <motion.button 
+        whileTap={{ scale: 0.9 }}
+        className="fixed bottom-8 left-8 w-[56px] h-[56px] rounded-full bg-gradient-to-br from-ocean to-terracotta flex items-center justify-center shadow-[0_8px_20px_rgba(27,108,168,0.3)] z-50"
+      >
+        <ShoppingCart className="w-6 h-6 text-white" />
+        <div className="absolute -top-1 -right-1 w-5 h-5 bg-saffron text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-warm-white">
+          0
+        </div>
+      </motion.button>
     </div>
   );
 }
