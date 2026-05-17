@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useUser } from "@clerk/nextjs";
 import { useProfile } from "@/lib/auth/profile-provider";
 import type { Product } from "@/lib/database.types";
@@ -27,6 +28,7 @@ export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { isSignedIn } = useUser();
   const { profile } = useProfile();
+  const authClient = useSupabase();
   const user = isSignedIn ? profile : null;
 
   useEffect(() => {
@@ -74,12 +76,11 @@ export default function MarketplacePage() {
     );
 
     if (!user) return;
-    const supabase = createClient();
     const product = products.find(p => p.id === productId);
     if (product?.saved) {
-      await supabase.from("bookmarks").delete().eq("post_id", productId).eq("user_id", user.id);
+      await authClient.from("bookmarks").delete().eq("post_id", productId).eq("user_id", user.id);
     } else {
-      await supabase.from("bookmarks").insert({ post_id: productId, user_id: user.id });
+      await authClient.from("bookmarks").insert({ post_id: productId, user_id: user.id });
     }
   };
 

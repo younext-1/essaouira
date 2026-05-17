@@ -10,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useAnimation, useMotionValue } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useUser } from "@clerk/nextjs";
 import { useProfile } from "@/lib/auth/profile-provider";
 import type { PostWithCounts, Profile } from "@/lib/database.types";
@@ -99,6 +100,7 @@ export default function ExplorePage() {
 
   const { isSignedIn } = useUser();
   const { profile } = useProfile();
+  const authClient = useSupabase(); // Authenticated client for writes
   const user = isSignedIn ? profile : null;
   const isArtisan = profile?.role === "artisan";
 
@@ -175,19 +177,17 @@ export default function ExplorePage() {
   const toggleLike = async (id: string) => {
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, liked: !p.liked, likes: p.liked ? p.likes - 1 : p.likes + 1 } : p)));
     if (!user) return;
-    const supabase = createClient();
     const post = posts.find((p) => p.id === id);
-    if (post?.liked) await supabase.from("likes").delete().eq("post_id", id).eq("user_id", user.id);
-    else await supabase.from("likes").insert({ post_id: id, user_id: user.id });
+    if (post?.liked) await authClient.from("likes").delete().eq("post_id", id).eq("user_id", user.id);
+    else await authClient.from("likes").insert({ post_id: id, user_id: user.id });
   };
 
   const toggleSave = async (id: string) => {
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, saved: !p.saved } : p)));
     if (!user) return;
-    const supabase = createClient();
     const post = posts.find((p) => p.id === id);
-    if (post?.saved) await supabase.from("bookmarks").delete().eq("post_id", id).eq("user_id", user.id);
-    else await supabase.from("bookmarks").insert({ post_id: id, user_id: user.id });
+    if (post?.saved) await authClient.from("bookmarks").delete().eq("post_id", id).eq("user_id", user.id);
+    else await authClient.from("bookmarks").insert({ post_id: id, user_id: user.id });
   };
 
   const toggleFollow = async (id: string) => {
@@ -195,9 +195,8 @@ export default function ExplorePage() {
     if (!post) return;
     setPosts((prev) => prev.map((p) => (p.id === id ? { ...p, following: !p.following } : p)));
     if (!user) return;
-    const supabase = createClient();
-    if (post.following) await supabase.from("follows").delete().eq("follower_id", user.id).eq("following_id", post.author_id);
-    else await supabase.from("follows").insert({ follower_id: user.id, following_id: post.author_id });
+    if (post.following) await authClient.from("follows").delete().eq("follower_id", user.id).eq("following_id", post.author_id);
+    else await authClient.from("follows").insert({ follower_id: user.id, following_id: post.author_id });
   };
 
   const [startY, setStartY] = useState(0);

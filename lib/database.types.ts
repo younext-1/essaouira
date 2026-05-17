@@ -8,15 +8,20 @@ export interface Profile {
   role: 'tourist' | 'artisan' | 'admin' | null
   username: string
   full_name: string | null
+  full_name_ar: string | null
   avatar_url: string | null
   cover_url: string | null
   title: string | null
+  title_ar: string | null
   location: string | null
   bio: string | null
+  bio_ar: string | null
   verified: boolean
   profile_md: string | null
   is_artisan: boolean
   is_tourist: boolean
+  craft_category: string | null
+  languages: string[] | null
   website: string | null
   whatsapp: string | null
   instagram: string | null
@@ -25,6 +30,11 @@ export interface Profile {
   custom_html: string | null
   custom_html_enabled: boolean
   custom_html_filename: string | null
+  is_open_now: boolean
+  work_start_time: string | null
+  work_end_time: string | null
+  work_days: string[] | null
+  onboarding_done: boolean
   created_at: string
   updated_at: string
 }
@@ -36,7 +46,6 @@ export interface ProfileStat {
   value: string
   suffix: string
   sort_order: number
-  created_at: string
 }
 
 export interface Specialty {
@@ -56,7 +65,7 @@ export interface Service {
   description: string | null
   duration: string | null
   price: string | null
-  price_usd: number | null
+  price_mad: number | null
   is_available: boolean
   sort_order: number
   created_at: string
@@ -67,7 +76,7 @@ export interface Post {
   author_id: string
   title: string | null
   content: string | null
-  category: 'artisan' | 'music' | 'surf' | 'food' | 'culture' | 'other' | null
+  category: 'artisan' | 'music' | 'surf' | 'food' | 'culture' | 'tourism' | 'other' | null
   location: string | null
   is_featured: boolean
   is_published: boolean
@@ -117,7 +126,6 @@ export interface PortfolioItem {
   title: string
   image_url: string | null
   price_mad: number | null
-  price_usd: number | null
   sort_order: number
   created_at: string
 }
@@ -128,7 +136,6 @@ export interface Product {
   title: string
   description: string | null
   price_mad: number
-  price_usd: number | null
   category: string | null
   image_url: string | null
   in_stock: boolean
@@ -154,18 +161,6 @@ export interface AiConversation {
   updated_at: string
 }
 
-export interface GuideBooking {
-  id: string
-  tourist_id: string
-  guide_id: string
-  service_id: string | null
-  date: string
-  time: string | null
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-  notes: string | null
-  created_at: string
-}
-
 // View type: posts_with_counts
 export interface PostWithCounts {
   id: string
@@ -183,9 +178,22 @@ export interface PostWithCounts {
   avatar_url: string | null
   verified: boolean
   author_location: string | null
-  author_whatsapp: string | null
+  craft_category: string | null
   likes_count: number
   bookmarks_count: number
   tags: string[] | null
   cover_image: string | null
 }
+
+export interface GuideBooking {
+  id: string
+  tourist_id: string
+  guide_id: string
+  service_id: string | null
+  date: string
+  time: string | null
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  notes: string | null
+  created_at: string
+}
+

@@ -41,16 +41,32 @@ export async function POST(req: Request) {
       evt.data;
 
     const fullName = [first_name, last_name].filter(Boolean).join(" ");
+    const baseUsername =
+      username || email_addresses?.[0]?.email_address?.split("@")[0] || id.slice(0, 8);
+
+    // Ensure unique username
+    let finalUsername = baseUsername;
+    let counter = 1;
+    while (true) {
+      const { data: existing } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", finalUsername)
+        .maybeSingle();
+      if (!existing) break;
+      finalUsername = `${baseUsername}${counter++}`;
+    }
 
     await supabase.from("profiles").insert({
       clerk_id: id,
       email: email_addresses?.[0]?.email_address ?? null,
-      full_name: fullName || null,
-      username: username || id,
+      full_name: fullName || finalUsername,
+      username: finalUsername,
       avatar_url: image_url || null,
       role: "tourist",
       is_tourist: true,
       is_artisan: false,
+      onboarding_done: false,
     });
   }
 

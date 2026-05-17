@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { createPublicClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
+import { useProfile } from "@/lib/auth/profile-provider";
 
 const CRAFT_CATEGORIES = [
   { value: "خشب", icon: "🪵", label: "خشب الثويا" },
@@ -23,13 +24,15 @@ const INTERESTS = [
 export default function OnboardingPage() {
   const { user } = useUser();
   const router = useRouter();
+  const supabase = useSupabase();
+  const { refreshProfile } = useProfile();
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<"tourist" | "artisan">("tourist");
   const [formData, setFormData] = useState({
     fullName: user?.fullName || "",
     username: user?.username || "",
     craft: "",
-    location: "",
+    location: "الصويرة، المغرب",
     bio: "",
     whatsapp: "",
     instagram: "",
@@ -38,6 +41,29 @@ export default function OnboardingPage() {
     language: "AR",
   });
   const [saving, setSaving] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+
+  // Real-time username availability check
+  const checkUsername = useCallback(async (username: string) => {
+    if (!username || username.length < 3) {
+      setUsernameStatus("idle");
+      return;
+    }
+    setUsernameStatus("checking");
+    try {
+      const { data } = await supabase.rpc("is_username_available", { p_username: username });
+      setUsernameStatus(data ? "available" : "taken");
+    } catch {
+      // Fallback: direct query
+      const { data } = await supabase.from("profiles").select("id").eq("username", username).maybeSingle();
+      setUsernameStatus(data ? "taken" : "available");
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => checkUsername(formData.username), 500);
+    return () => clearTimeout(timeout);
+  }, [formData.username, checkUsername]);
 
   const updateField = (key: string, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -54,6 +80,7 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     if (!user) return;
+    if (usernameStatus === "taken") return;
     setSaving(true);
 
     try {
@@ -66,25 +93,32 @@ export default function OnboardingPage() {
         },
       });
 
-      // 2. Update Supabase profile (webhook may have created it)
-      const supabase = createPublicClient();
-      await supabase
+      // 2. Update Supabase profile (webhook created it, we update with onboarding data)
+      const { error } = await supabase
         .from("profiles")
         .update({
-          full_name: formData.fullName,
-          username: formData.username,
+          full_name: formData.fullName || null,
+          username: formData.username || user.id.slice(0, 12),
           role,
           is_artisan: role === "artisan",
           is_tourist: role === "tourist",
-          location: formData.location || null,
+          craft_category: role === "artisan" ? formData.craft : null,
+          location: formData.location || "الصويرة، المغرب",
           bio: formData.bio || null,
           whatsapp: formData.whatsapp || null,
           instagram: formData.instagram || null,
+          onboarding_done: true,
           updated_at: new Date().toISOString(),
         })
         .eq("clerk_id", user.id);
 
-      router.push("/");
+      if (error) {
+        console.error("Supabase update error:", error);
+        throw error;
+      }
+
+      await refreshProfile();
+      router.push("/explore");
       router.refresh();
     } catch (err) {
       console.error("Onboarding error:", err);
@@ -195,6 +229,9 @@ export default function OnboardingPage() {
                     placeholder="amine-craft"
                     dir="ltr"
                   />
+                  {usernameStatus === "checking" && <p className="text-text-muted text-[12px] mt-1">⏳ جاري التحقق...</p>}
+                  {usernameStatus === "available" && <p className="text-green-600 text-[12px] mt-1">✓ اسم المستخدم متاح</p>}
+                  {usernameStatus === "taken" && <p className="text-red-500 text-[12px] mt-1">✗ اسم المستخدم مستخدم بالفعل</p>}
                 </div>
 
                 {role === "artisan" && (

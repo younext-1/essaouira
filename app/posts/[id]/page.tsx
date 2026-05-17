@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Heart, Bookmark, Share2, MapPin, ArrowRight, Image as ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import { GradientAvatar } from "@/components/ui/GradientAvatar";
 import { createClient } from "@/lib/supabase/client";
+import { useSupabase } from "@/hooks/useSupabase";
 import { useUser } from "@clerk/nextjs";
 import { useProfile } from "@/lib/auth/profile-provider";
 
@@ -41,6 +42,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
 
   const { isSignedIn } = useUser();
   const { profile } = useProfile();
+  const authClient = useSupabase();
   const user = isSignedIn ? profile : null;
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
       setImages(imgUrls.length > 0 ? imgUrls : data.cover_image ? [data.cover_image] : []);
 
       // Increment views
-      await supabase.rpc("increment_view_count", { p_post_id: id });
+      await supabase.rpc("increment_view_count", { post_id: id });
 
       // Check user interactions
       if (user) {
@@ -77,17 +79,15 @@ export default function PostDetailPage({ params }: { params: Promise<{ id: strin
     setLiked(!liked);
     setLikeCount((c) => (liked ? c - 1 : c + 1));
     if (!user) return;
-    const supabase = createClient();
-    if (liked) await supabase.from("likes").delete().eq("post_id", id).eq("user_id", user.id);
-    else await supabase.from("likes").insert({ post_id: id, user_id: user.id });
+    if (liked) await authClient.from("likes").delete().eq("post_id", id).eq("user_id", user.id);
+    else await authClient.from("likes").insert({ post_id: id, user_id: user.id });
   };
 
   const toggleSave = async () => {
     setSaved(!saved);
     if (!user) return;
-    const supabase = createClient();
-    if (saved) await supabase.from("bookmarks").delete().eq("post_id", id).eq("user_id", user.id);
-    else await supabase.from("bookmarks").insert({ post_id: id, user_id: user.id });
+    if (saved) await authClient.from("bookmarks").delete().eq("post_id", id).eq("user_id", user.id);
+    else await authClient.from("bookmarks").insert({ post_id: id, user_id: user.id });
   };
 
   if (loading) {
