@@ -44,10 +44,10 @@ export function NarrowSidebar() {
               <motion.div
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl spring-transition ${
                   isActive
-                    ? "bg-warm-sand text-ocean border-l-4 border-terracotta font-medium"
-                    : "text-text-secondary hover:text-ocean hover:bg-warm-sand"
+                    ? "bg-[#F5F0E8] text-ocean border-l-4 border-terracotta font-medium"
+                    : "text-[#71717A] hover:text-ocean hover:bg-[#F5F0E8]"
                 }`}
               >
                 <Icon className="w-5 h-5" />
@@ -63,10 +63,10 @@ export function NarrowSidebar() {
             <motion.div
               whileHover={{ x: 4 }}
               whileTap={{ scale: 0.98 }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl spring-transition ${
                 pathname === "/profile/edit"
-                  ? "bg-warm-sand text-ocean border-l-4 border-terracotta font-medium"
-                  : "text-text-secondary hover:text-ocean hover:bg-warm-sand"
+                  ? "bg-[#F5F0E8] text-ocean border-l-4 border-terracotta font-medium"
+                  : "text-[#71717A] hover:text-ocean hover:bg-[#F5F0E8]"
               }`}
             >
               <Edit className="w-5 h-5" />
@@ -78,12 +78,12 @@ export function NarrowSidebar() {
       
       <div className="mt-auto px-4 flex flex-col gap-4">
         <Link href="/book">
-          <button className="w-full bg-terracotta text-white rounded-xl py-3 font-medium shadow-md hover:bg-[#A83A0C] hover:shadow-lg transition-all duration-300">
+          <button className="w-full bg-[#CA8A04] text-white rounded-xl py-3 font-medium shadow-md hover:bg-[#A83A0C] hover:shadow-lg spring-transition">
             Book a Guide
           </button>
         </Link>
         
-        <div className="border-t border-warm-border pt-4 flex items-center gap-3 px-2">
+        <div className="border-t border-[rgba(232,227,216,0.8)] pt-4 flex items-center gap-3 px-2">
           {isSignedIn ? (
             <>
               <Link href={profileLink}>
@@ -96,7 +96,7 @@ export function NarrowSidebar() {
                 </div>
               </Link>
               <div className="flex flex-col flex-1 min-w-0">
-                <span className="text-sm font-semibold text-text-primary truncate">{displayName}</span>
+                <span className="text-sm font-semibold text-[#18181B] truncate">{displayName}</span>
                 <Link href={profileLink} className="text-xs text-text-muted hover:text-ocean transition-colors">
                   View Profile
                 </Link>
@@ -112,8 +112,8 @@ export function NarrowSidebar() {
             </>
           ) : (
             <SignInButton mode="modal">
-              <button className="w-full flex items-center gap-3 text-text-secondary hover:text-ocean transition-colors">
-                <div className="w-10 h-10 rounded-full bg-warm-sand border border-warm-border flex items-center justify-center">
+              <button className="w-full flex items-center gap-3 text-[#71717A] hover:text-ocean transition-colors">
+                <div className="w-10 h-10 rounded-full bg-[#F5F0E8] border border-[rgba(232,227,216,0.8)] flex items-center justify-center">
                   <Compass className="w-5 h-5" />
                 </div>
                 <span className="text-sm font-medium">Sign In</span>

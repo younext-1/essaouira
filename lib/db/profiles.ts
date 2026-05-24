@@ -42,9 +42,9 @@ export async function getProfile(username: string): Promise<FullProfile | null> 
       .eq('profile_id', profile.id)
       .order('sort_order'),
     supabase
-      .from('reviews')
-      .select('*')
-      .eq('profile_id', profile.id)
+      .from('product_reviews')
+      .select('*, products(name, thumbnail_url)')
+      .eq('buyer_id', profile.id)
       .order('created_at', { ascending: false }),
   ])
 

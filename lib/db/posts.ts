@@ -125,3 +125,46 @@ export async function getUserBookmarkedPostIds(userId: string): Promise<string[]
 
   return data?.map((b: { post_id: string }) => b.post_id) ?? []
 }
+
+/**
+ * FIX 7: Range-based offset pagination for blog posts.
+ */
+export async function getPostsPaginated(
+  page = 1,
+  limit = 10,
+  category?: string
+): Promise<{ data: PostWithCounts[]; total: number; page: number; totalPages: number }> {
+  const supabase = await createClient()
+  const from = (page - 1) * limit
+  const to = from + limit - 1
+
+  let countQuery = supabase
+    .from('posts_with_counts')
+    .select('*', { count: 'exact', head: true })
+
+  let query = supabase
+    .from('posts_with_counts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  if (category && category !== 'all' && category !== 'All' && category !== 'الكل') {
+    countQuery = countQuery.eq('category', category)
+    query = query.eq('category', category)
+  }
+
+  const [countRes, dataRes] = await Promise.all([countQuery, query])
+
+  if (countRes.error) throw countRes.error
+  if (dataRes.error) throw dataRes.error
+
+  const total = countRes.count ?? 0
+  const totalPages = Math.ceil(total / limit)
+
+  return {
+    data: (dataRes.data as PostWithCounts[]) ?? [],
+    total,
+    page,
+    totalPages,
+  }
+}

@@ -1,5 +1,3 @@
-"use client";
-
 import { ButtonHTMLAttributes, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -10,17 +8,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", ...props }, ref) => {
     const variants = {
-      primary: "bg-brand-deep-ocean text-white hover:bg-brand-deep-ocean/90",
-      outlined: "border-2 border-brand-dark-text/20 text-brand-dark-text hover:bg-brand-dark-text/5",
-      ghost: "text-brand-dark-text hover:bg-brand-soft-gray",
-      gradient: "bg-gradient-to-r from-brand-terracotta to-brand-saffron text-white hover:shadow-lg hover:scale-105 active:scale-95 transition-all",
+      primary: "bg-[#18181B] text-white hover:bg-[#18181B]/90", // Charcoal Ink
+      outlined: "border border-[rgba(232,227,216,0.45)] text-[#18181B] hover:bg-[#F5F0E8]",
+      ghost: "text-[#71717A] hover:text-[#18181B] hover:bg-[#F5F0E8]",
+      gradient: "bg-accent-gradient text-white hover-lift",
     };
 
     return (
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center rounded-full font-medium transition-colors focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center rounded-[10px] px-6 h-[44px] font-medium spring-transition active-push cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#CA8A04] disabled:pointer-events-none disabled:opacity-50",
           variants[variant],
           className
         )}

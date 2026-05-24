@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function PillFilter({ 
   label, 
@@ -12,16 +12,16 @@ export function PillFilter({
   onClick: () => void 
 }) {
   return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
+    <button
       onClick={onClick}
-      className={`px-[18px] md:px-5 py-[8px] md:py-2 rounded-[24px] text-[14px] md:text-[15px] whitespace-nowrap transition-all duration-300 border ${
+      className={cn(
+        "px-[18px] md:px-5 py-[8px] md:py-2 rounded-[24px] text-[14px] md:text-[15px] whitespace-nowrap spring-transition active-push border cursor-pointer",
         isActive 
-          ? "bg-terracotta border-terracotta text-white font-medium shadow-[0_4px_12px_rgba(193,68,14,0.25)]" 
-          : "bg-white border-warm-border text-text-secondary hover:text-text-primary hover:border-warm-border"
-      }`}
+          ? "bg-[#18181B] border-[#18181B] text-white font-medium shadow-sm" 
+          : "bg-white border-[rgba(232,227,216,0.8)] text-[#71717A] hover:text-[#18181B] hover:border-[rgba(232,227,216,1)]"
+      )}
     >
       {label}
-    </motion.button>
+    </button>
   );
 }

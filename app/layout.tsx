@@ -1,51 +1,55 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Playfair_Display, Inter, Noto_Sans_Arabic } from "next/font/google";
-import "./globals.css";
-import { ProfileProvider } from "@/lib/auth/profile-provider";
-import { AuthModalProvider } from "@/store/useAuthModal";
-import { NarrowSidebar } from "@/components/layout/NarrowSidebar";
-import { TopBar } from "@/components/layout/TopBar";
+import { Outfit, DM_Sans } from "next/font/google";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { SignInModal } from "@/components/ui/SignInModal";
+import Providers from "@/components/Providers";
+import SocialProofToasts from "@/components/SocialProofToasts";
+import GlobalChatbot from "@/components/GlobalChatbot";
+import "./globals.css";
 
-const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-display" });
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-const arabic = Noto_Sans_Arabic({ subsets: ["arabic"], variable: "--font-arabic" });
+const outfit = Outfit({ 
+  subsets: ["latin"], 
+  variable: "--font-display" 
+});
+
+const dmSans = DM_Sans({ 
+  subsets: ["latin"], 
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-sans" 
+});
 
 export const metadata: Metadata = {
-  title: "Mogador Connect | Digital Hub",
-  description: "Experience the timeless allure of Essaouira's ancient ramparts and the exhilarating pulse of its Atlantic winds.",
+  title: "Mogador Craft | Premium Moroccan Artisan Marketplace",
+  description: "Explore and buy authentic, high-quality Moroccan handcrafted items direct from local artisans in the Essaouira Medina. Safely delivered worldwide with direct fair trade payments.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+  }: Readonly<{
+    children: React.ReactNode;
+  }>) {
   return (
     <ClerkProvider>
-      <html lang="en" dir="ltr" className={`${playfair.variable} ${inter.variable} ${arabic.variable} h-full antialiased`}>
-        <body className="h-full bg-warm-white text-text-primary overflow-hidden">
-          <ProfileProvider>
-            <AuthModalProvider>
-              <div className="flex h-screen w-full bg-warm-white">
-                <div className="hidden md:flex h-full shrink-0 border-r border-warm-border bg-white z-50">
-                  <NarrowSidebar />
-                </div>
-                <div className="flex-1 flex flex-col relative h-full min-w-0">
-                  <TopBar />
-                  <main className="flex-1 overflow-y-auto overflow-x-hidden w-full relative">
-                    {children}
-                  </main>
-                  <div className="md:hidden">
-                    <BottomNav />
-                  </div>
-                </div>
-              </div>
-              <SignInModal />
-            </AuthModalProvider>
-          </ProfileProvider>
+      <html 
+        lang="en" 
+        dir="ltr" 
+        className={`${outfit.variable} ${dmSans.variable} h-full antialiased`}
+      >
+        <body className="h-full bg-[#FAFAF7] text-[#1C1917] font-sans antialiased">
+          <Providers>
+            <div className="min-h-screen flex flex-col relative w-full bg-[#FAFAF7]">
+              <Navbar />
+              <main className="flex-1 w-full relative">
+                {children}
+              </main>
+              <Footer />
+              <BottomNav />
+              <SocialProofToasts />
+              <GlobalChatbot />
+            </div>
+          </Providers>
         </body>
       </html>
     </ClerkProvider>

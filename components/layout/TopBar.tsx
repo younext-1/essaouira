@@ -20,9 +20,9 @@ export function TopBar() {
   else if (pathname === "/ai-guide") title = "AI Guide";
 
   return (
-    <header className="h-[48px] md:h-[56px] pt-[env(safe-area-inset-top)] w-full flex items-center justify-between px-4 bg-white border-b border-warm-border shadow-[0_1px_8px_rgba(0,0,0,0.06)] shrink-0 z-40">
+    <header className="h-[48px] md:h-[56px] pt-[env(safe-area-inset-top)] w-full flex items-center justify-between px-4 bg-white border-b border-[rgba(232,227,216,0.8)] shadow-[0_1px_8px_rgba(0,0,0,0.06)] shrink-0 z-40">
       <div className="flex-1 flex items-center gap-2">
-        <div className="flex bg-warm-sand rounded-lg p-1 text-xs font-medium text-text-secondary">
+        <div className="flex bg-[#F5F0E8] rounded-lg p-1 text-xs font-medium text-[#71717A]">
           {["EN", "FR", "AR"].map(l => (
             <button
               key={l}
@@ -36,11 +36,11 @@ export function TopBar() {
       </div>
       
       <div className="flex-1 flex justify-center">
-        <h1 className="text-text-primary font-bold text-[17px] md:text-lg tracking-wide font-arabic">{title}</h1>
+        <h1 className="text-[#18181B] font-bold text-[17px] md:text-lg tracking-wide font-arabic">{title}</h1>
       </div>
 
       <div className="flex-1 flex justify-end items-center gap-1 md:gap-2">
-        <motion.button whileTap={{ scale: 0.9 }} className="hidden md:flex w-[44px] h-[44px] md:w-10 md:h-10 items-center justify-center rounded-full hover:bg-warm-sand text-text-secondary hover:text-ocean transition-colors">
+        <motion.button whileTap={{ scale: 0.9 }} className="hidden md:flex w-[44px] h-[44px] md:w-10 md:h-10 items-center justify-center rounded-full hover:bg-[#F5F0E8] text-[#71717A] hover:text-ocean transition-colors">
           <Share className="w-5 h-5" />
         </motion.button>
 
@@ -56,7 +56,7 @@ export function TopBar() {
           <SignInButton mode="modal">
             <motion.button
               whileTap={{ scale: 0.9 }}
-              className="px-4 py-2 rounded-xl bg-terracotta text-white text-[13px] font-medium hover:bg-[#A83A0C] transition-colors"
+              className="px-4 py-2 rounded-xl bg-[#CA8A04] text-white text-[13px] font-medium hover:bg-[#A83A0C] transition-colors"
             >
               Sign In
             </motion.button>

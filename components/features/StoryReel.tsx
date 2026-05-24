@@ -19,7 +19,7 @@ export function StoryReel() {
         <div className="relative w-16 h-16 rounded-full border-2 border-brand-dark-text/10 flex items-center justify-center text-brand-deep-ocean hover:border-brand-saffron transition-colors">
           <Plus className="w-8 h-8" />
         </div>
-        <span className="text-xs font-medium text-brand-dark-text">Your Story</span>
+        <span className="text-xs font-medium text-[#18181B]">Your Story</span>
       </div>
 
       {/* Stories */}
@@ -36,7 +36,7 @@ export function StoryReel() {
               <Avatar src={story.image} alt={story.name} size="lg" className="group-hover:scale-105 transition-transform" />
             </div>
           </div>
-          <span className="text-xs font-medium text-brand-dark-text">{story.name}</span>
+          <span className="text-xs font-medium text-[#18181B]">{story.name}</span>
         </motion.div>
       ))}
     </div>

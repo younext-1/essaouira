@@ -1,8 +1,15 @@
 import React from "react";
+import { cn } from "@/lib/utils";
 
-export function DarkCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+export function DarkCard({ children, className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`bg-white rounded-[20px] shadow-[0_2px_16px_rgba(26,26,46,0.07)] border border-warm-border overflow-hidden transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_8px_32px_rgba(26,26,46,0.12)] ${className}`}>
+    <div 
+      className={cn(
+        "bg-[#18181B] text-white rounded-[24px] border border-[rgba(232,227,216,0.1)] shadow-[0_8px_30px_rgba(0,0,0,0.12)] overflow-hidden", 
+        className
+      )}
+      {...props}
+    >
       {children}
     </div>
   );

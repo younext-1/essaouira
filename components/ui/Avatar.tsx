@@ -19,11 +19,11 @@ export function Avatar({ src, alt, size = "md", showStatus, className }: AvatarP
 
   return (
     <div className={cn("relative rounded-full shrink-0", sizes[size], className)}>
-      <div className="absolute inset-0 rounded-full overflow-hidden border-2 border-brand-off-white bg-brand-soft-gray">
+      <div className="absolute inset-0 rounded-full overflow-hidden border-2 border-white bg-[#F5F0E8]">
         <Image src={src} alt={alt} fill className="object-cover" sizes="80px" />
       </div>
       {showStatus && (
-        <span className="absolute bottom-0 right-0 block w-3 h-3 rounded-full bg-brand-turquoise ring-2 ring-brand-off-white" />
+        <span className="absolute bottom-0 right-0 block w-3 h-3 rounded-full bg-[#2A9D8F] ring-2 ring-white" />
       )}
     </div>
   );

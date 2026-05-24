@@ -4,8 +4,8 @@ import { motion, HTMLMotionProps } from "framer-motion";
 export function OutlineButton({ children, className = "", ...props }: HTMLMotionProps<"button">) {
   return (
     <motion.button 
-      whileTap={{ scale: 0.96 }}
-      className={`border border-[#555] text-white rounded-[20px] px-4 py-1.5 text-sm font-medium hover:bg-white/5 transition-colors ${className}`}
+      whileTap={{ scale: 0.98, y: 1 }}
+      className={`border border-[rgba(232,227,216,0.8)] text-[#18181B] rounded-[10px] px-6 h-[44px] text-sm font-medium hover:bg-[#F5F0E8] spring-transition cursor-pointer ${className}`}
       {...props}
     >
       {children}

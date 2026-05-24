@@ -14,10 +14,10 @@ export function FilterPills() {
           key={filter}
           onClick={() => setActive(filter)}
           className={cn(
-            "px-5 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all duration-300",
+            "px-5 py-2 rounded-full whitespace-nowrap text-sm font-medium spring-transition",
             active === filter 
               ? "bg-brand-saffron text-brand-deep-ocean shadow-md" 
-              : "bg-white border border-brand-dark-text/10 text-brand-dark-text hover:bg-brand-soft-gray"
+              : "bg-white border border-brand-dark-text/10 text-[#18181B] hover:bg-brand-soft-gray"
           )}
         >
           {filter}

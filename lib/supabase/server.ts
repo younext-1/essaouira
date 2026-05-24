@@ -10,14 +10,21 @@ export async function createClerkSupabaseClient() {
   const { getToken } = await auth()
   const supabaseToken = await getToken({ template: 'supabase' })
 
+  const headers: Record<string, string> = {}
+
+  // FIX 1: Only attach the Authorization header if supabaseToken is present.
+  // If user is unauthenticated, omit the header entirely so Supabase falls back 
+  // to anonymous public access safely (preventing Bearer null invalid token error).
+  if (supabaseToken) {
+    headers['Authorization'] = `Bearer ${supabaseToken}`
+  }
+
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: {
-        headers: {
-          Authorization: `Bearer ${supabaseToken}`,
-        },
+        headers,
       },
     }
   )
@@ -36,3 +43,4 @@ export function createPublicSupabaseClient() {
 
 // Re-export for backwards compat with existing `createClient` calls in db/ layer
 export { createClerkSupabaseClient as createClient }
+

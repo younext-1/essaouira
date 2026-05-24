@@ -101,10 +101,10 @@ export function PostCard({
               <Avatar src={avatar} alt={author} size="md" />
               <div className="flex flex-col">
                 <div className="flex items-center gap-1">
-                  <span className="font-semibold text-brand-dark-text">{author}</span>
+                  <span className="font-semibold text-[#18181B]">{author}</span>
                   {isVerified && <BadgeCheck className="w-4 h-4 text-brand-turquoise" />}
                 </div>
-                <div className="flex items-center gap-1 text-xs text-brand-dark-text/60">
+                <div className="flex items-center gap-1 text-xs text-[#18181B]/60">
                   <MapPin className="w-3 h-3" />
                   <span>{location}</span>
                 </div>
@@ -114,10 +114,10 @@ export function PostCard({
             <button 
               onClick={handleFollow}
               className={cn(
-                "px-4 py-1.5 text-sm font-semibold rounded-full transition-all duration-300",
+                "px-4 py-1.5 text-sm font-semibold rounded-full spring-transition",
                 isFollowing 
-                  ? "bg-brand-terracotta text-white" 
-                  : "border-2 border-brand-dark-text/20 text-brand-dark-text hover:border-brand-dark-text"
+                  ? "bg-[#CA8A04] text-white" 
+                  : "border-2 border-brand-dark-text/20 text-[#18181B] hover:border-brand-dark-text"
               )}
             >
               {isFollowing ? "Following ✓" : "Follow"}
@@ -126,15 +126,15 @@ export function PostCard({
 
           {/* Content */}
           <div>
-            <h3 className="font-display font-bold text-xl text-brand-dark-text mb-2 leading-tight">
+            <h3 className="font-display font-bold text-xl text-[#18181B] mb-2 leading-tight">
               {title}
             </h3>
-            <p className="text-brand-dark-text/80 text-sm line-clamp-3 leading-relaxed mb-3">
+            <p className="text-[#18181B]/80 text-sm line-clamp-3 leading-relaxed mb-3">
               {description}
             </p>
             <div className="flex flex-wrap gap-2">
               {tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs bg-brand-soft-gray/50 border-none text-brand-dark-text/70">
+                <Badge key={tag} variant="outline" className="text-xs bg-brand-soft-gray/50 border-none text-[#18181B]/70">
                   {tag}
                 </Badge>
               ))}
@@ -147,7 +147,7 @@ export function PostCard({
               <motion.button
                 onClick={() => setIsLiked(!isLiked)}
                 whileTap={{ scale: 0.8 }}
-                className="flex items-center gap-1.5 text-brand-dark-text/70 hover:text-brand-rose transition-colors"
+                className="flex items-center gap-1.5 text-[#18181B]/70 hover:text-brand-rose transition-colors"
               >
                 <motion.div
                   animate={isLiked ? { scale: [1, 1.3, 1] } : {}}
@@ -158,17 +158,17 @@ export function PostCard({
                 <span className="text-sm font-medium">{isLiked ? "2.4k" : "2.3k"}</span>
               </motion.button>
               
-              <button className="flex items-center gap-1.5 text-brand-dark-text/70 hover:text-brand-deep-ocean transition-colors">
+              <button className="flex items-center gap-1.5 text-[#18181B]/70 hover:text-brand-deep-ocean transition-colors">
                 <MessageCircle className="w-6 h-6" />
                 <span className="text-sm font-medium">128</span>
               </button>
               
-              <button className="flex items-center gap-1.5 text-brand-dark-text/70 hover:text-brand-deep-ocean transition-colors">
+              <button className="flex items-center gap-1.5 text-[#18181B]/70 hover:text-brand-deep-ocean transition-colors">
                 <Share2 className="w-6 h-6" />
               </button>
             </div>
             
-            <div className="flex items-center gap-1.5 text-brand-dark-text/50">
+            <div className="flex items-center gap-1.5 text-[#18181B]/50">
               <Eye className="w-4 h-4" />
               <span className="text-sm font-medium">{views}</span>
             </div>

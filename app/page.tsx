@@ -1,210 +1,318 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import { Compass, ShoppingBag, Bot, Calendar, ChevronRight, Star, MapPin, Image as ImageIcon } from "lucide-react";
-import { GradientAvatar } from "@/components/ui/GradientAvatar";
-import { createClient } from "@/lib/supabase/client";
-import type { PostWithCounts, Profile } from "@/lib/database.types";
+import { useState, useEffect } from 'react';
+import { useProducts } from '@/hooks/useProducts';
+import ProductCard from '@/components/ProductCard';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
+import { Compass, Sparkles, Loader2, ArrowRight, Store as StoreIcon, ShieldCheck, HeartHandshake, MapPin, ChevronRight, ShoppingCart } from 'lucide-react';
 
-const fadeUp = { hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } };
+// Category names must match names seeded in migration 013 (categories table)
+const CATEGORIES = [
+  'All',
+  'Rugs & Tapestries',
+  'Wood Carvings',
+  'Oils & Cosmetics',
+  'Excursions & Guided Tours',
+  'Surf & Water Sports Lessons',
+  'Culinary Arts & Cooking Classes',
+];
 
-export default function LandingPage() {
-  const [artisans, setArtisans] = useState<Profile[]>([]);
-  const [latestPosts, setLatestPosts] = useState<PostWithCounts[]>([]);
+export default function HomePage() {
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [layoutMode, setLayoutMode] = useState<'grid' | 'menu'>('grid');
 
+  // 1. Fetch Products
+  const { data: products, isLoading: productsLoading, error: productsError } = useProducts({
+    category: selectedCategory === 'All' ? null : selectedCategory,
+  });
+
+  // 2. Fetch Vetted Stores
+  const { data: stores = [], isLoading: storesLoading } = useQuery({
+    queryKey: ['vetted-stores'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('*, profiles(full_name), products(id, name, price, images, thumbnail_url)')
+        .limit(6);
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  // 3. SuperDeals Live countdown timer
+  const [timeLeft, setTimeLeft] = useState({ hours: 9, minutes: 50, seconds: 21 });
   useEffect(() => {
-    const supabase = createClient();
-    supabase.from("profiles").select("*").eq("is_artisan", true).eq("verified", true).limit(6).then(({ data }) => setArtisans((data as Profile[]) ?? []));
-    supabase.from("posts_with_counts").select("*").order("created_at", { ascending: false }).limit(3).then(({ data }) => setLatestPosts((data as PostWithCounts[]) ?? []));
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
+        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
+        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+        return { hours: 9, minutes: 50, seconds: 21 }; // Looping countdown
+      });
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
+  // Slice products for deals boxes
+  const bundleDealsProducts = products ? products.slice(0, 3) : [];
+  const superDealsProducts = products ? products.slice(3, 6) : [];
+
   return (
-    <div className="w-full min-h-full overflow-x-hidden" dir="ltr">
-
-      {/* ── HERO ── */}
-      <section className="relative w-full min-h-[85vh] flex flex-col items-center justify-center text-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-ocean via-ocean/90 to-seafoam" />
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?w=1600')", backgroundSize: "cover", backgroundPosition: "center" }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-warm-white via-transparent to-transparent" />
-
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} transition={{ duration: 0.8 }} className="relative z-10 px-6 max-w-2xl">
-          <span className="inline-block bg-white/15 backdrop-blur-md border border-white/20 text-white text-[13px] font-medium px-4 py-1.5 rounded-full mb-6">🌊 Essaouira, Morocco</span>
-          <h1 className="font-display text-white text-[42px] md:text-[56px] font-bold leading-[1.15] mb-4 drop-shadow-lg">
-            Discover <span className="text-saffron">Mogador</span>
-          </h1>
-          <p className="text-white/90 text-[16px] md:text-[18px] leading-relaxed mb-8 max-w-md mx-auto">
-            Connect with local artisans and experience the authentic culture of Essaouira
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/explore" className="inline-flex items-center justify-center gap-2 bg-white text-ocean font-bold text-[15px] px-8 py-3.5 rounded-[14px] shadow-[0_8px_24px_rgba(0,0,0,0.15)] hover:scale-[1.03] transition-transform">
-              <Compass className="w-5 h-5" /> Explore Now
-            </Link>
-            <Link href="/book" className="inline-flex items-center justify-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 text-white font-bold text-[15px] px-8 py-3.5 rounded-[14px] hover:bg-white/25 transition-colors">
-              <Calendar className="w-5 h-5" /> Book a Guide
-            </Link>
-          </div>
-        </motion.div>
-
-        <div className="absolute bottom-0 w-full">
-          <svg viewBox="0 0 1440 120" className="w-full h-auto translate-y-1 fill-warm-white" preserveAspectRatio="none">
-            <path d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z" />
-          </svg>
-        </div>
-      </section>
-
-      {/* ── WHAT IS MOGADOR ── */}
-      <section className="w-full max-w-5xl mx-auto px-4 py-16 md:py-20">
-        <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="font-display text-text-primary text-[28px] md:text-[32px] font-bold text-center mb-12">
-          What will you find in <span className="text-terracotta">Mogador Connect</span>?
-        </motion.h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[
-            { icon: "🎨", title: "Connect with Artisans", desc: "Discover the most skilled artisans in Essaouira and contact them directly", color: "from-terracotta/10 to-saffron/10" },
-            { icon: "🌊", title: "Discover Experiences", desc: "Kitesurfing, Gnaoua music, authentic Moroccan food and unforgettable adventures", color: "from-ocean/10 to-seafoam/10" },
-            { icon: "🛍️", title: "Shop Authentic Crafts", desc: "Handmade Thuya wood carvings, traditional silver jewelry, and beautiful weaving", color: "from-purple-500/10 to-pink-500/10" },
-          ].map((card, i) => (
-            <motion.div key={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.15 }}
-              className={`bg-gradient-to-br ${card.color} rounded-[24px] p-8 border border-warm-border hover:shadow-lg transition-shadow text-center`}>
-              <div className="text-[48px] mb-4">{card.icon}</div>
-              <h3 className="text-text-primary font-bold text-[18px] mb-2">{card.title}</h3>
-              <p className="text-text-secondary text-[14px] leading-relaxed">{card.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── FEATURED ARTISANS ── */}
-      {artisans.length > 0 && (
-        <section className="w-full bg-gradient-to-b from-warm-sand/50 to-warm-white py-16 md:py-20">
-          <div className="max-w-5xl mx-auto px-4">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="font-display text-text-primary text-[24px] md:text-[28px] font-bold">⭐ Featured Artisans</h2>
-              <Link href="/explore" className="text-ocean text-[14px] font-medium flex items-center gap-1 hover:gap-2 transition-all">
-                View All <ChevronRight className="w-4 h-4" />
+    <div className="w-full min-h-screen bg-[#F5F5F0] select-none pb-16">
+      
+      {/* 1. AliExpress-Style Tilted Hero Slide Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="w-full rounded-[24px] bg-[#FAF8EE] border border-warm-border p-8 md:p-12 relative overflow-hidden flex flex-col md:flex-row items-center justify-between min-h-[300px] md:min-h-[360px] shadow-sm">
+          
+          {/* Subtle decorations */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#CA8A04]/5 filter blur-2xl" />
+          
+          {/* Left Text Column */}
+          <div className="max-w-md space-y-4 md:space-y-6 text-center md:text-left z-10">
+            <h1 className="font-bold text-4xl md:text-5xl text-[#1C1917] tracking-tight leading-[1.15]" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
+              Medina Upgrade <br />
+              <span className="text-[#CA8A04] font-normal italic">Boost your aesthetic</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-[#44403C] font-light max-w-sm">
+              Discover verified Thuya cedarwood, pure cosmetic Argan elixir, and custom hand-stitched Medina leather goods.
+            </p>
+            <div className="pt-2">
+              <Link 
+                href="/search"
+                className="inline-flex items-center justify-center px-8 py-3 rounded-full bg-[#1C1917] text-white text-xs font-bold hover:bg-[#CA8A04] hover:-translate-y-0.5 active:scale-95 transition-all shadow-sm"
+              >
+                Shop now
               </Link>
             </div>
-            <div className="flex gap-5 overflow-x-auto hide-scrollbar pb-4">
-              {artisans.map((a, i) => (
-                <Link key={a.id} href={`/profile/${a.username || a.id}`}>
-                  <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.1 }}
-                    className="shrink-0 w-[200px] bg-white rounded-[20px] border border-warm-border p-5 text-center hover:shadow-lg transition-shadow group cursor-pointer">
-                    <GradientAvatar src={a.avatar_url || ""} alt={a.full_name || ""} size={72} className="mx-auto mb-3 group-hover:scale-105 transition-transform" />
-                    <h4 className="text-text-primary font-bold text-[15px] mb-1 truncate">{a.full_name}</h4>
-                    <p className="text-text-muted text-[12px] mb-2 truncate">{a.title}</p>
-                    <div className="flex items-center justify-center gap-1 text-saffron text-[12px]">
-                      <Star className="w-3.5 h-3.5 fill-current" /> <span>4.9</span>
-                    </div>
-                  </motion.div>
-                </Link>
-              ))}
-            </div>
           </div>
-        </section>
-      )}
 
-      {/* ── LATEST POSTS ── */}
-      {latestPosts.length > 0 && (
-        <section className="w-full max-w-5xl mx-auto px-4 py-16 md:py-20">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="font-display text-text-primary text-[24px] md:text-[28px] font-bold">📰 Latest Posts</h2>
-            <Link href="/explore" className="text-ocean text-[14px] font-medium flex items-center gap-1 hover:gap-2 transition-all">
-              View All <ChevronRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {latestPosts.map((post, i) => (
-              <Link key={post.id} href={`/posts/${post.id}`}>
-                <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} transition={{ delay: i * 0.1 }}
-                  className="bg-white rounded-[20px] border border-warm-border overflow-hidden hover:shadow-lg transition-shadow group cursor-pointer">
-                  <div className="relative w-full h-[180px] bg-warm-sand">
-                    {post.cover_image ? (
-                      <Image src={post.cover_image} alt={post.title || ""} fill className="object-cover group-hover:scale-[1.03] transition-transform" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-10 h-10 text-text-muted" /></div>
-                    )}
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-terracotta text-[11px] font-medium px-3 py-1 rounded-full">{post.category}</div>
-                  </div>
-                  <div className="p-4">
-                    <h4 className="text-text-primary font-bold text-[15px] mb-1 line-clamp-1">{post.title}</h4>
-                    <p className="text-text-secondary text-[13px] line-clamp-2 mb-3">{post.content}</p>
-                    <div className="flex items-center gap-2">
-                      <GradientAvatar src={post.avatar_url || ""} alt={post.full_name || ""} size={24} />
-                      <span className="text-text-muted text-[12px]">{post.full_name}</span>
-                    </div>
-                  </div>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ── AI GUIDE PROMO ── */}
-      <section className="w-full bg-gradient-to-br from-ocean/5 to-seafoam/10 py-16 md:py-20">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <div className="text-[56px] mb-4">🤖</div>
-            <h2 className="font-display text-text-primary text-[28px] md:text-[32px] font-bold mb-4">
-              Ask our AI Guide about Essaouira
-            </h2>
-            <p className="text-text-secondary text-[16px] mb-8 max-w-md mx-auto">The best spots, restaurants, and local artisans — your personal guide 24/7</p>
-            <div className="bg-white rounded-[20px] border border-warm-border p-6 max-w-md mx-auto mb-8 text-left">
-              <div className="bg-ocean/10 text-ocean rounded-[14px] px-4 py-2.5 mb-3 text-[14px] inline-block">Where can I find the best wood artisans?</div>
-              <div className="bg-warm-sand rounded-[14px] px-4 py-2.5 text-[14px] text-text-primary leading-relaxed">
-                I highly recommend visiting the blacksmiths and woodworkers market in the Old Medina! You will find Amine there — a master Thuya craftsman with 12 years of experience 🪵
+          {/* Right Floating Tilted Image Showcase (Matches AliExpress Screenshot) */}
+          <div className="relative w-full md:w-[480px] h-[240px] md:h-[280px] mt-8 md:mt-0 flex items-center justify-center select-none">
+            
+            {/* Tilted Card 1 (Scale/Thuya box item) */}
+            <div className="absolute left-6 top-8 w-44 md:w-52 aspect-[4/3] bg-white border border-warm-border rounded-2xl p-2.5 shadow-md rotate-[-8deg] hover:rotate-[-4deg] transition-all duration-500 z-10 group/tilt1 cursor-pointer">
+              <div className="w-full h-full rounded-xl bg-[#FAFAF7] overflow-hidden relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1546213290-e1b492ab3eee?w=300"
+                  alt="Craft miniature"
+                  className="w-full h-full object-cover group-hover/tilt1:scale-105 transition-transform duration-700"
+                />
+                <span className="absolute bottom-2 left-2 rounded bg-[#1C1917] text-[8.5px] font-extrabold text-white px-2 py-0.5 shadow-sm">
+                  186.00 DH
+                </span>
               </div>
             </div>
-            <Link href="/ai-guide" className="inline-flex items-center gap-2 bg-ocean text-white font-bold text-[15px] px-8 py-3.5 rounded-[14px] shadow-[0_8px_20px_rgba(27,108,168,0.3)] hover:scale-[1.03] transition-transform">
-              <Bot className="w-5 h-5" /> Start Conversation
-            </Link>
-          </motion.div>
+
+            {/* Tilted Card 2 (Bowl/Argan cosmetic oil item) */}
+            <div className="absolute right-6 top-4 w-44 md:w-52 aspect-[4/3] bg-white border border-warm-border rounded-2xl p-2.5 shadow-md rotate-[6deg] hover:rotate-[2deg] transition-all duration-500 z-20 group/tilt2 cursor-pointer">
+              <div className="w-full h-full rounded-xl bg-[#FAFAF7] overflow-hidden relative">
+                <img 
+                  src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=300"
+                  alt="Cosmetic miniature"
+                  className="w-full h-full object-cover group-hover/tilt2:scale-105 transition-transform duration-700"
+                />
+                <span className="absolute bottom-2 left-2 rounded bg-[#C1440E] text-[8.5px] font-extrabold text-white px-2 py-0.5 shadow-sm">
+                  604.00 DH
+                </span>
+              </div>
+            </div>
+            
+          </div>
         </div>
       </section>
 
-      {/* ── QUICK ACTIONS ── */}
-      <section className="w-full max-w-3xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { icon: Compass, label: "Explore", href: "/explore", color: "text-ocean" },
-            { icon: ShoppingBag, label: "Marketplace", href: "/marketplace", color: "text-terracotta" },
-            { icon: Calendar, label: "Book Guide", href: "/book", color: "text-saffron" },
-            { icon: Bot, label: "Ask AI", href: "/ai-guide", color: "text-seafoam" },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <Link key={item.href} href={item.href}>
-                <div className="bg-white rounded-[16px] border border-warm-border p-5 text-center hover:shadow-md transition-shadow group cursor-pointer">
-                  <Icon className={`w-8 h-8 ${item.color} mx-auto mb-2 group-hover:scale-110 transition-transform`} />
-                  <span className="text-text-primary font-medium text-[14px]">{item.label}</span>
+      {/* 2. Today's Deals Split Section (AliExpress Today's deals Box Style) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 select-none">
+        
+        {/* Deal Section Heading */}
+        <div className="text-center pb-5 select-none">
+          <h2 className="text-xl md:text-2xl font-black text-[#1C1917] tracking-tight uppercase" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
+            Today's deals
+          </h2>
+        </div>
+
+        {/* Dual Panel Split Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 select-none">
+          
+          {/* LEFT: Bundle Deals Box (3+ items from 29 DH) */}
+          <div className="bg-white rounded-3xl border border-warm-border p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+            <div>
+              <div className="flex items-center justify-between border-b border-warm-border/50 pb-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-[#1C1917]">Bundle deals</h3>
+                  <span className="rounded-full bg-[#CA8A04] text-white text-[9px] font-black px-2.5 py-0.5 uppercase tracking-wider">
+                    3+ from 29.00 DH
+                  </span>
                 </div>
-              </Link>
-            );
-          })}
+                <Link href="/search" className="text-xs font-bold text-gray-400 hover:text-[#CA8A04] flex items-center gap-0.5">
+                  See More <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              {/* 3 mini cards side by side */}
+              <div className="grid grid-cols-3 gap-3">
+                {bundleDealsProducts.length > 0 ? (
+                  bundleDealsProducts.map((p) => {
+                    const imgCover = p.images && p.images.length > 0 ? p.images[0] : p.thumbnail_url || '/placeholder.jpg';
+                    return (
+                      <Link 
+                        key={p.id}
+                        href={`/product/${p.id}`}
+                        className="group/bundle bg-[#F5F5F0]/50 hover:bg-[#F5F5F0] rounded-2xl border border-warm-border/60 p-2 text-center flex flex-col items-center justify-between transition-colors shadow-sm"
+                      >
+                        <div className="h-16 w-full rounded-xl overflow-hidden bg-white mb-2">
+                          <img src={imgCover} alt={p.name} className="h-full w-full object-cover group-hover/bundle:scale-105 transition-transform" />
+                        </div>
+                        <span className="text-[10px] font-black text-red-500">{p.price} DH</span>
+                      </Link>
+                    );
+                  })
+                ) : (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 rounded-2xl h-24 animate-pulse" />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: SuperDeals Box (Live countdown timer) */}
+          <div className="bg-white rounded-3xl border border-warm-border p-6 shadow-sm flex flex-col justify-between min-h-[220px]">
+            <div>
+              <div className="flex items-center justify-between border-b border-warm-border/50 pb-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-extrabold text-[#1C1917]">SuperDeals</h3>
+                  
+                  {/* Countdown pill */}
+                  <div className="flex items-center gap-1 bg-red-500 text-white font-mono text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm">
+                    <span>Ends in:</span>
+                    <span>{String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:{String(timeLeft.seconds).padStart(2, '0')}</span>
+                  </div>
+                </div>
+                <Link href="/search" className="text-xs font-bold text-gray-400 hover:text-[#CA8A04] flex items-center gap-0.5">
+                  See More <ChevronRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
+
+              {/* 3 mini cards side-by-side */}
+              <div className="grid grid-cols-3 gap-3">
+                {superDealsProducts.length > 0 ? (
+                  superDealsProducts.map((p) => {
+                    const imgCover = p.images && p.images.length > 0 ? p.images[0] : p.thumbnail_url || '/placeholder.jpg';
+                    return (
+                      <Link 
+                        key={p.id}
+                        href={`/product/${p.id}`}
+                        className="group/super bg-[#F5F5F0]/50 hover:bg-[#F5F5F0] rounded-2xl border border-warm-border/60 p-2 text-center flex flex-col items-center justify-between transition-colors shadow-sm"
+                      >
+                        <div className="h-16 w-full rounded-xl overflow-hidden bg-white mb-2">
+                          <img src={imgCover} alt={p.name} className="h-full w-full object-cover group-hover/super:scale-105 transition-transform" />
+                        </div>
+                        <span className="text-[10px] font-black text-red-500">{p.price} DH</span>
+                      </Link>
+                    );
+                  })
+                ) : (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 rounded-2xl h-24 animate-pulse" />
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="w-full bg-gradient-to-b from-warm-sand/50 to-warm-sand py-12 border-t border-warm-border">
-        <div className="max-w-5xl mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ocean">
-              <path d="M2 12h4l2-3 4 6 2-3h4" />
-            </svg>
-            <span className="font-display font-bold text-xl text-ocean">Mogador Connect</span>
-          </div>
-          <p className="text-text-muted text-[14px] mb-6">Connect with the soul of Essaouira</p>
-          <div className="flex items-center justify-center gap-6 mb-8 text-[14px]">
-            <Link href="/explore" className="text-text-secondary hover:text-ocean transition-colors">Explore</Link>
-            <Link href="/marketplace" className="text-text-secondary hover:text-ocean transition-colors">Marketplace</Link>
-            <Link href="/ai-guide" className="text-text-secondary hover:text-ocean transition-colors">AI Guide</Link>
-            <Link href="/book" className="text-text-secondary hover:text-ocean transition-colors">Book Guide</Link>
-          </div>
-          <p className="text-text-muted text-[12px]">Proudly made in Essaouira 🌊</p>
+      {/* 3. Main Product Catalog Section ("More to Love" Style) */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        {/* Gallery Title */}
+        <div className="text-center pb-6 select-none">
+          <h2 className="text-2xl font-black text-[#1C1917] tracking-tight uppercase" style={{ fontFamily: 'var(--font-display), sans-serif' }}>
+            More to love
+          </h2>
+          <p className="text-xs text-text-secondary mt-1 font-light">
+            Discover verified Moroccan hand-craft secrets direct from local Medina ateliers.
+          </p>
         </div>
-      </footer>
+
+        {/* Category Filter scroll row */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 select-none shrink-0 no-scrollbar">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`flex-shrink-0 px-5 py-2.5 rounded-full text-xs font-bold tracking-wider uppercase transition-all duration-300 border cursor-pointer ${
+                selectedCategory === cat
+                  ? 'bg-[#1C1917] text-white border-[#1C1917] shadow-sm'
+                  : 'bg-white hover:bg-white/80 text-text-secondary border-warm-border hover:border-gray-400'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Loading Skeletons */}
+        {productsLoading && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mt-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div 
+                key={i} 
+                className="bg-white rounded-2xl p-3 border border-warm-border h-[260px] flex flex-col justify-between animate-pulse shadow-sm"
+              >
+                <div className="w-full h-1/2 rounded-xl bg-gray-100 mb-2" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-1/3 bg-gray-100 rounded" />
+                  <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                </div>
+                <div className="w-full h-6 bg-gray-100 rounded-lg mt-3" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Database Connection Error Callout */}
+        {productsError && !productsLoading && (
+          <div className="mt-8 p-8 bg-red-50 border border-red-100 text-red-800 rounded-3xl text-center max-w-xl mx-auto shadow-sm">
+            <h3 className="font-bold text-lg mb-2">Database Syncing Offline</h3>
+            <p className="text-xs mb-4 leading-relaxed">{productsError instanceof Error ? productsError.message : 'Failed to query database records.'}</p>
+            <p className="text-[10px] text-red-500 font-extrabold tracking-wider uppercase">
+              Please verify that the Supabase migration script has run successfully.
+            </p>
+          </div>
+        )}
+
+        {/* Empty Catalog State */}
+        {!productsLoading && !productsError && (!products || products.length === 0) && (
+          <div className="text-center py-16 px-4 bg-white border border-warm-border rounded-3xl max-w-md mx-auto mt-8 shadow-sm">
+            <Compass className="w-10 h-10 text-gray-300 mx-auto mb-4 animate-bounce" />
+            <h3 className="font-bold text-base text-[#1C1917] mb-1">No items found</h3>
+            <p className="text-xs text-text-secondary mb-6 leading-relaxed font-light">
+              We couldn't find any premium products matching your category selections at this moment.
+            </p>
+            <button
+              onClick={() => setSelectedCategory('All')}
+              className="text-xs font-bold text-[#CA8A04] border-b border-[#CA8A04] hover:text-[#1C1917] hover:border-[#1C1917] pb-0.5 transition-all cursor-pointer bg-transparent"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
+
+        {/* Product Cards High-Density commercial grid */}
+        {!productsLoading && !productsError && products && products.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mt-8 animate-in fade-in duration-300">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+
+      </main>
     </div>
   );
 }
