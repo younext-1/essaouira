@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Outfit, DM_Sans } from "next/font/google";
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -40,7 +41,9 @@ export default function RootLayout({
         <body className="h-full bg-[#FAFAF7] text-[#1C1917] font-sans antialiased">
           <Providers>
             <div className="min-h-screen flex flex-col relative w-full bg-[#FAFAF7]">
-              <Navbar />
+              <Suspense fallback={<div className="h-16 sm:h-20 bg-[#FAFAF7] border-b border-warm-border/50" />}>
+                <Navbar />
+              </Suspense>
               <main className="flex-1 w-full relative">
                 {children}
               </main>
