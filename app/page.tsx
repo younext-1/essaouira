@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import { useQuery } from '@tanstack/react-query';
@@ -21,7 +21,7 @@ const CATEGORIES = [
   'Culinary Arts & Cooking Classes',
 ];
 
-export default function HomePage() {
+function HomePageContent() {
   const { isSignedIn } = useUser();
   const searchParams = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -443,5 +443,17 @@ export default function HomePage() {
       )}
 
     </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full min-h-screen bg-[#F5F5F0] flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 text-[#E61E42] animate-spin" />
+      </div>
+    }>
+      <HomePageContent />
+    </Suspense>
   );
 }
