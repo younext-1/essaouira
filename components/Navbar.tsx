@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { UserButton, useUser, SignInButton } from '@clerk/nextjs';
 import { Search, Heart, ShoppingBag, Store, Menu, X, Compass, ChevronDown, Package } from 'lucide-react';
@@ -9,6 +9,9 @@ import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useProfile } from '@/hooks/useProfile';
 import SearchOverlay from './SearchOverlay';
+import CartDrawer from './CartDrawer';
+import CameraSearchModal from './CameraSearchModal';
+import NotificationPopover from './NotificationPopover';
 
 interface NavbarProps {
   onSearch?: (term: string) => void;
@@ -17,6 +20,7 @@ interface NavbarProps {
 export default function Navbar({ onSearch }: NavbarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user, isSignedIn, isLoaded } = useUser();
   const { profile } = useProfile(user?.id);
   const { cartItemsCount } = useCart();
@@ -26,6 +30,49 @@ export default function Navbar({ onSearch }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [searchOverlayOpen, setSearchOverlayOpen] = useState(false);
+  const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+  const [cameraSearchOpen, setCameraSearchOpen] = useState(false);
+  
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      type: 'store' as const,
+      title: 'تسجيل بائع جديد ⛺',
+      body: 'قام الحرفي المتميز "Atlas Botanicals" بافتتاح متجره لعرض زيوت الأركان العضوية!',
+      timeText: 'منذ دقيقة',
+      link: '/search?category=Oils%20%26%20Cosmetics',
+      unread: true,
+    },
+    {
+      id: 2,
+      type: 'promo' as const,
+      title: 'خصم شحن مجاني ⚡',
+      body: 'احصل على شحن مجاني آمن لكافة مشترياتك من الصناعات التقليدية برمز كود: MOGADOR',
+      timeText: 'منذ ساعة',
+      link: '/search',
+      unread: true,
+    },
+    {
+      id: 3,
+      type: 'system' as const,
+      title: 'نظام الدفع العادل 🔒',
+      body: 'تم سداد المستحقات بالكامل لورشة المعلم عبد الجليل للصناعات الخشبية بنجاح.',
+      timeText: 'منذ ساعتين',
+      link: '/profile',
+      unread: false,
+    }
+  ]);
+
+  const handleMarkAsRead = (id: number) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, unread: false } : n));
+  };
+
+  const handleMarkAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+  };
+
+  const hasUnreadNotifications = notifications.some(n => n.unread);
 
   // Hide global Navbar inside Seller/Artisan dashboard and Auth portals
   if (
@@ -57,8 +104,154 @@ export default function Navbar({ onSearch }: NavbarProps) {
   return (
     <header className="sticky top-0 z-50 w-full bg-[#FAFAF7] border-b border-warm-border select-none font-sans" style={{ fontFamily: 'var(--font-sans), sans-serif' }}>
       
-      {/* 1. Primary Header Row (AliExpress Top Bar Style) */}
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      {/* ========================================================
+          MOBILE-ONLY HEADER BLOCK (ALIEXPRESS APP STYLE) 
+          ======================================================== */}
+      <div className="md:hidden w-full bg-[#FAFAF7] px-4 pt-3.5 pb-2.5 flex flex-col gap-3 select-none">
+        
+        {/* Row 1: AliExpress Bold Logo Branding & Notification bell */}
+        <div className="flex items-center justify-between w-full">
+          <Link href="/" className="flex items-center gap-1.5 active:opacity-90">
+            <span className="font-sans font-black text-xl tracking-tight text-[#1C1917]">
+              MOGADOR
+              <span className="text-[#E61E42] font-serif italic font-extrabold ml-1.5 text-[13px] tracking-wide bg-[#FFEBEF] px-1.5 py-0.5 rounded-md">
+                Choice
+              </span>
+            </span>
+          </Link>
+          
+          <div className="flex items-center gap-3 text-[#1C1917]">
+            {/* Dashboard / Sell CTA for Mobile */}
+            {isLoaded && isSignedIn && (
+              <Link 
+                href={profile?.is_artisan ? '/dashboard' : '/dashboard/store'} 
+                className="flex items-center gap-1.5 bg-[#1C1917] text-white px-3 py-1.5 rounded-full text-[9px] font-black uppercase active-push border border-gray-800 shadow-sm shrink-0 font-sans"
+              >
+                <svg viewBox="0 0 24 24" className="w-3 h-3 fill-none stroke-current stroke-[2.5]" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="3" y="3" width="7" height="9" />
+                  <rect x="14" y="3" width="7" height="5" />
+                  <rect x="14" y="12" width="7" height="9" />
+                  <rect x="3" y="16" width="7" height="5" />
+                </svg>
+                <span>Dashboard</span>
+              </Link>
+            )}
+
+            {/* Bell/Notification icon */}
+            <div className="relative">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNotificationsOpen(!notificationsOpen);
+                }}
+                className="relative p-1 text-[#1C1917] hover:text-[#E61E42] transition-colors active-push cursor-pointer bg-transparent block"
+              >
+                <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-none stroke-current stroke-[2.2]" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                {hasUnreadNotifications && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#E61E42] ring-1 ring-white animate-pulse" />
+                )}
+              </button>
+
+              <NotificationPopover 
+                isOpen={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+                notifications={notifications}
+                onMarkAsRead={handleMarkAsRead}
+                onMarkAllAsRead={handleMarkAllAsRead}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Camera Search input pill matching screenshot */}
+        <div 
+          onClick={() => setSearchOverlayOpen(true)}
+          className="w-full flex items-center bg-white rounded-full border-2 border-[#1C1917] h-10 px-3 cursor-pointer group/search shadow-sm hover:border-[#CA8A04] transition-all duration-300"
+        >
+          {/* Camera Icon on the left */}
+          <svg 
+            onClick={(e) => {
+              e.stopPropagation();
+              setCameraSearchOpen(true);
+            }}
+            viewBox="0 0 24 24" 
+            className="w-5 h-5 text-gray-500 mr-2.5 shrink-0 hover:text-[#E61E42] cursor-pointer transition-colors" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          
+          <span className="text-[12px] text-gray-400 font-semibold flex-1 truncate">
+            Needoh Jellyfish
+          </span>
+
+          {/* Dark Pill Search Icon Button */}
+          <div className="h-7.5 w-7.5 rounded-full bg-[#1C1917] text-white flex items-center justify-center hover:bg-[#E61E42] transition-colors ml-2 select-none shrink-0 shadow-sm active-push">
+            <Search className="h-3.5 w-3.5 stroke-[2.8]" />
+          </div>
+        </div>
+
+        {/* Row 3: Horizontal category swipable tab list */}
+        <div className="flex items-center gap-5 overflow-x-auto select-none no-scrollbar pb-1 -mx-4 px-4 scroll-smooth">
+          {['Explore', 'Rugs & Tapestries', 'Wood Carvings', 'Oils & Cosmetics', 'Guided Tours', 'Surf Lessons', 'Cooking Classes'].map((cat) => {
+            // Resolve active tab state from URL parameter
+            const catParam = searchParams.get('category');
+            const activeCategory = catParam || 'Explore';
+            
+            let tabName = cat;
+            if (cat === 'Explore') tabName = 'Explore';
+            else if (cat === 'Rugs & Tapestries') tabName = 'Rugs';
+            else if (cat === 'Wood Carvings') tabName = 'Wood Carvings';
+            else if (cat === 'Oils & Cosmetics') tabName = 'Oils';
+            else if (cat === 'Guided Tours') tabName = 'Guided Tours';
+            else if (cat === 'Surf Lessons') tabName = 'Surf Lessons';
+            else if (cat === 'Cooking Classes') tabName = 'Cooking';
+
+            let queryVal = '';
+            if (cat === 'Rugs & Tapestries') queryVal = 'Rugs & Tapestries';
+            else if (cat === 'Wood Carvings') queryVal = 'Wood Carvings';
+            else if (cat === 'Oils & Cosmetics') queryVal = 'Oils & Cosmetics';
+            else if (cat === 'Guided Tours') queryVal = 'Excursions & Guided Tours';
+            else if (cat === 'Surf Lessons') queryVal = 'Surf & Water Sports Lessons';
+            else if (cat === 'Cooking Classes') queryVal = 'Culinary Arts & Cooking Classes';
+
+            const href = queryVal ? `/?category=${encodeURIComponent(queryVal)}` : '/';
+            const isActive = (cat === 'Explore' && activeCategory === 'Explore') || (queryVal && activeCategory === queryVal);
+
+            return (
+              <Link 
+                key={cat}
+                href={href}
+                className="flex-shrink-0 relative py-1 flex flex-col items-center justify-center cursor-pointer active:opacity-85"
+              >
+                <span className={`text-[12px] font-sans tracking-wide transition-colors duration-200 ${
+                  isActive ? 'text-[#1C1917] font-black' : 'text-text-secondary font-semibold'
+                }`}>
+                  {tabName}
+                </span>
+                {isActive && (
+                  <div className="absolute bottom-0 w-8 h-[2.5px] bg-[#E61E42] rounded-full animate-in fade-in zoom-in duration-300" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+      </div>
+
+      {/* ========================================================
+          DESKTOP-ONLY HEADER BLOCK (ORIGINAL DESKTOP LAYOUT) 
+          ======================================================== */}
+      <div className="hidden md:block mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 sm:h-20 items-center justify-between gap-4 md:gap-8">
           
           {/* Logo Brand Header */}
@@ -129,9 +322,9 @@ export default function Navbar({ onSearch }: NavbarProps) {
             </Link>
 
             {/* Cart Icon */}
-            <Link
-              href="/cart"
-              className="relative p-1.5 text-[#44403C] hover:text-[#CA8A04] transition-colors"
+            <button
+              onClick={() => setCartDrawerOpen(true)}
+              className="relative p-1.5 text-[#44403C] hover:text-[#CA8A04] transition-colors cursor-pointer"
             >
               <ShoppingBag className="h-5 w-5" />
               {cartItemsCount > 0 && (
@@ -139,7 +332,7 @@ export default function Navbar({ onSearch }: NavbarProps) {
                   {cartItemsCount}
                 </span>
               )}
-            </Link>
+            </button>
 
             {/* Dashboard / Sell CTA */}
             {isLoaded && isSignedIn && (
@@ -154,14 +347,17 @@ export default function Navbar({ onSearch }: NavbarProps) {
 
           {/* Mobile responsive toggle action triggers */}
           <div className="flex md:hidden items-center gap-3">
-            <Link href="/cart" className="relative p-1.5 text-[#1C1917]">
+            <button 
+              onClick={() => setCartDrawerOpen(true)} 
+              className="relative p-1.5 text-[#1C1917] cursor-pointer"
+            >
               <ShoppingBag className="h-5.5 w-5.5" />
               {cartItemsCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#CA8A04] text-[8px] font-bold text-white">
                   {cartItemsCount}
                 </span>
               )}
-            </Link>
+            </button>
             {isLoaded && isSignedIn && (
               <UserButton />
             )}
@@ -176,7 +372,7 @@ export default function Navbar({ onSearch }: NavbarProps) {
         </div>
       </div>
 
-      {/* 2. Secondary Sub-Header Categories Row (AliExpress Links Bar Style) */}
+      {/* 2. Secondary Sub-Header Categories Row (AliExpress Links Bar Style) - DESKTOP ONLY */}
       <div className="border-t border-warm-border/50 bg-[#FAFAF7] hidden md:block">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between text-xs font-semibold text-[#44403C]">
           
@@ -335,6 +531,18 @@ export default function Navbar({ onSearch }: NavbarProps) {
       <SearchOverlay 
         isOpen={searchOverlayOpen} 
         onClose={() => setSearchOverlayOpen(false)} 
+      />
+
+      {/* Global Slide-over Cart Drawer */}
+      <CartDrawer 
+        isOpen={cartDrawerOpen} 
+        onClose={() => setCartDrawerOpen(false)} 
+      />
+
+      {/* Gemini-Powered Camera Search Modal */}
+      <CameraSearchModal 
+        isOpen={cameraSearchOpen} 
+        onClose={() => setCameraSearchOpen(false)} 
       />
     </header>
   );

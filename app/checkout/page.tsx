@@ -26,6 +26,8 @@ export default function CheckoutPage() {
   const [zip, setZip] = useState('');
   const [placingOrder, setPlacingOrder] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [placedOrderId, setPlacedOrderId] = useState<string | null>(null);
 
   const getDialCode = (c: string) => {
     switch (c) {
@@ -137,13 +139,17 @@ export default function CheckoutPage() {
       };
 
       // Execute the unified custom atomic place order transaction!
-      await placeOrder({
+      const placed = await placeOrder({
         items: itemsPayload,
         shippingAddress: shippingAddressPayload,
       });
       
-      // Navigate to order confirmation and tracking timelines!
-      router.push('/orders');
+      if (placed && placed.length > 0) {
+        setPlacedOrderId(placed[0].id);
+        setShowSuccessModal(true);
+      } else {
+        router.push('/orders');
+      }
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to place order transaction. Please try again.');
@@ -414,6 +420,67 @@ export default function CheckoutPage() {
 
         </div>
 
+      {/* 5. GORGEOUS WhatsApp COD Order Confirmation Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md select-none font-sans">
+          <div className="bg-white rounded-[32px] border border-warm-border p-8 max-w-md w-full shadow-2xl space-y-6 text-center animate-in zoom-in duration-300">
+            
+            {/* Success Animation Badge */}
+            <div className="mx-auto h-20 w-20 rounded-full bg-green-50 border border-green-200 flex items-center justify-center text-green-500 shadow-sm">
+              <CheckCircle className="h-10 w-10 text-green-600 fill-current" />
+            </div>
+
+            {/* Success Titles */}
+            <div className="space-y-1">
+              <h3 className="text-xl font-extrabold text-[#18181B]">
+                Order Placed Successfully!
+              </h3>
+              <h4 className="text-sm font-bold text-green-600 uppercase tracking-widest">
+                تم تسجيل طلبك بنجاح!
+              </h4>
+            </div>
+
+            <p className="text-xs text-[#71717A] leading-relaxed">
+              Thank you for supporting Essaouira's master artisans. Your Cash on Delivery (COD) order has been secured in escrow. 
+              To guarantee fast processing, please click below to confirm your delivery address on WhatsApp directly.
+            </p>
+
+            {/* Price tag total review */}
+            <div className="rounded-2xl bg-gray-50 border border-gray-150 p-4 flex justify-between items-center text-xs font-bold">
+              <span className="text-[#71717A] uppercase text-[10px] tracking-wide">Total Order Price</span>
+              <span className="text-lg text-red-500">{grandTotal} DH</span>
+            </div>
+
+            {/* Actions: Primary green WhatsApp confirmation */}
+            <div className="space-y-2 pt-2">
+              <a
+                href={`https://wa.me/212608078652?text=${encodeURIComponent(
+                  `السلام عليكم، قمت للتو بطلب المنتجات التالية عبر موقع موكادور Mogador:\n\nالاسم: ${fullName}\nالهاتف: ${getDialCode(country)}${phone.trim()}\nالعنوان: ${address}, ${city}\n\nالمنتجات:\n${cartItems.map(item => `- ${item.products?.name} x${item.quantity}`).join('\n')}\n\nالمجموع الإجمالي: ${grandTotal} DH\n\nالرجاء تأكيد الطلب وبدء عملية التوصيل!`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] hover:bg-[#20BA5A] py-3.5 text-xs font-extrabold text-white shadow-md active:scale-95 transition-all cursor-pointer"
+              >
+                <svg className="h-4.5 w-4.5 fill-current" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.704 1.459h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                Confirm Order on WhatsApp
+              </a>
+
+              <Link
+                href="/orders"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                }}
+                className="w-full flex items-center justify-center rounded-2xl bg-gray-100 hover:bg-gray-200 py-3 text-xs font-bold text-[#18181B] active:scale-95 transition-all cursor-pointer"
+              >
+                Go to Order Timeline / تتبع الطلب
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      )}
       </main>
     </div>
   );

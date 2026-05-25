@@ -178,7 +178,7 @@ export default function ProductCard({ product }: ProductCardProps) {
           {/* Title with inline 'Choice' badge */}
           <Link href={`/product/${product.id}`} className="block group/link">
             <div className="text-[11px] leading-tight text-[#44403C] line-clamp-2 mt-0.5 group-hover/link:text-[#CA8A04] transition-colors">
-              <span className="inline-block bg-[#CA8A04] text-white text-[8px] font-black px-1 py-0.5 rounded mr-1 select-none tracking-wider uppercase">
+              <span className="inline-block bg-[#FFF5C2] text-[#78350F] border border-[#FDE68A] text-[8px] font-black px-1.5 py-0.5 rounded mr-1 select-none tracking-wider uppercase">
                 Choice
               </span>
               {product.name}

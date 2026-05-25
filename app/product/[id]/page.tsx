@@ -775,14 +775,42 @@ export default function ProductDetailPage({ params }: PageProps) {
                 />
               </div>
 
-              {/* Vetted Badges */}
-              <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[rgba(232,227,216,0.45)] text-[10px] text-[#71717A] font-semibold select-none">
-                <span className="flex items-center gap-1">
-                  <ShieldCheck className="h-4 w-4 text-[#10B981]" /> Medina Authenticity Inspected
-                </span>
-                <span className="flex items-center gap-1">
-                  <Truck className="h-4 w-4 text-[#10B981]" /> Free Medina Express Shipping
-                </span>
+              {/* Vetted Badges & Premium Trust Cards Grid */}
+              <div className="space-y-4 border-t border-[rgba(232,227,216,0.45)] pt-4 select-none">
+                <div className="flex flex-wrap items-center justify-between gap-4 text-[10px] text-[#71717A] font-semibold">
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="h-4 w-4 text-[#10B981]" /> Medina Authenticity Inspected
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Truck className="h-4 w-4 text-[#10B981]" /> Free Medina Express Shipping
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5 pt-2">
+                  <div className="rounded-2xl border border-warm-border/60 bg-gradient-to-br from-[#FAFAF7] to-white p-3 text-center space-y-1.5 hover:shadow-sm transition-shadow">
+                    <div className="mx-auto h-7 w-7 rounded-full bg-yellow-50 flex items-center justify-center text-[#CA8A04]">
+                      <Sparkles className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="block text-[9px] font-extrabold text-[#1C1917] uppercase tracking-wide">100% Handcrafted</span>
+                    <span className="block text-[7.5px] text-gray-400 font-medium leading-tight">Vetted Master Artisans</span>
+                  </div>
+                  
+                  <div className="rounded-2xl border border-warm-border/60 bg-gradient-to-br from-[#FAFAF7] to-white p-3 text-center space-y-1.5 hover:shadow-sm transition-shadow">
+                    <div className="mx-auto h-7 w-7 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="block text-[9px] font-extrabold text-[#1C1917] uppercase tracking-wide">Escrow Secured</span>
+                    <span className="block text-[7.5px] text-gray-400 font-medium leading-tight">Pay only after inspection</span>
+                  </div>
+
+                  <div className="rounded-2xl border border-warm-border/60 bg-gradient-to-br from-[#FAFAF7] to-white p-3 text-center space-y-1.5 hover:shadow-sm transition-shadow">
+                    <div className="mx-auto h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                      <Truck className="h-3.5 w-3.5" />
+                    </div>
+                    <span className="block text-[9px] font-extrabold text-[#1C1917] uppercase tracking-wide">Medina Direct</span>
+                    <span className="block text-[7.5px] text-gray-400 font-medium leading-tight">Direct logistics hubs</span>
+                  </div>
+                </div>
               </div>
 
             </div>

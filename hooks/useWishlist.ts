@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@clerk/nextjs';
-import { supabase } from '@/lib/supabase';
+import { useSupabase } from '@/hooks/useSupabase';
 import { WishlistItem } from '@/types';
 import { useProfile } from '@/hooks/useProfile';
 
@@ -8,6 +8,7 @@ export function useWishlist() {
   const { user } = useUser();
   const { profile, loading: profileLoading } = useProfile(user?.id);
   const queryClient = useQueryClient();
+  const supabase = useSupabase();
 
   const userId = profile?.id; // Secure DB UUID
 

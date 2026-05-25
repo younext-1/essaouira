@@ -185,7 +185,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.href}
                   onClick={() => handleNavClick(item.href)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold spring-transition text-left cursor-pointer ${
-                    isActive ? 'bg-[#18181B] text-white' : 'text-[#71717A] hover:bg-[#1F2937] hover:text-white'
+                    isActive ? 'bg-[#CA8A04] text-white shadow-sm' : 'text-[#71717A] hover:bg-[#1F2937] hover:text-white'
                   }`}
                 >
                   <Icon className="h-4.5 w-4.5 shrink-0" />

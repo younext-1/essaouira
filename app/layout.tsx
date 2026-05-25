@@ -46,7 +46,7 @@ export default function RootLayout({
               </main>
               <Footer />
               <BottomNav />
-              <SocialProofToasts />
+              {/* <SocialProofToasts /> */}
               <GlobalChatbot />
             </div>
           </Providers>

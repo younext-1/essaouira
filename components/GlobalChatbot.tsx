@@ -181,7 +181,7 @@ export default function GlobalChatbot() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 select-none font-sans">
+    <div className="fixed bottom-20 md:bottom-6 right-6 z-50 select-none font-sans">
       
       {/* 1. FLOATING BUBBLE BUTTON */}
       {!isOpen && (

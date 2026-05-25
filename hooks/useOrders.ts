@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@clerk/nextjs';
-import { supabase } from '@/lib/supabase';
+import { useSupabase } from '@/hooks/useSupabase';
 import { Order, OrderItem } from '@/types';
 import { useProfile } from '@/hooks/useProfile';
 import { useCart } from '@/hooks/useCart';
@@ -10,6 +10,7 @@ export function useOrders() {
   const { profile, loading: profileLoading } = useProfile(user?.id);
   const queryClient = useQueryClient();
   const { clearCart } = useCart();
+  const supabase = useSupabase();
 
   const userId = profile?.id; // Secure DB UUID
 
@@ -101,92 +102,30 @@ export function useOrders() {
       if (!userId) throw new Error('User profile not resolved');
       if (items.length === 0) throw new Error('No items to order');
 
-      // Group items by storeId (multi-vendor)
-      const storesItems: Record<string, typeof items> = {};
-      items.forEach((item) => {
-        if (!storesItems[item.storeId]) {
-          storesItems[item.storeId] = [];
-        }
-        storesItems[item.storeId].push(item);
+      const response = await fetch('/api/v1/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          shippingAddress,
+          notes,
+        }),
       });
 
-      const totalAmountAllStores = items.reduce(
-        (sum, item) => sum + item.priceAtPurchase * item.quantity,
-        0
-      );
-
-      // Create Parent Order
-      const { data: parentOrder, error: parentError } = await supabase
-        .from('parent_orders')
-        .insert({
-          buyer_id: userId,
-          total_amount: totalAmountAllStores,
-          shipping_address: {
-            fullName: shippingAddress.fullName,
-            addressLine1: shippingAddress.addressLine1,
-            city: shippingAddress.city,
-            country: shippingAddress.country,
-            zip: shippingAddress.zip,
-            phone: shippingAddress.phone
-          },
-          currency: 'MAD',
-          notes,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
-      if (parentError || !parentOrder) throw parentError || new Error('Failed to create parent order');
-
-      const placedOrders: any[] = [];
-
-      // Create Child Order and Order Items for each store
-      for (const [storeId, storeItems] of Object.entries(storesItems)) {
-        const subtotal = storeItems.reduce(
-          (sum, item) => sum + item.priceAtPurchase * item.quantity,
-          0
-        );
-
-        // Insert Child Order
-        const { data: childOrder, error: childError } = await supabase
-          .from('child_orders')
-          .insert({
-            parent_id: parentOrder.id,
-            store_id: storeId,
-            status: 'pending',
-            subtotal,
-            shipping_cost: 0.00, // standard domestic standard cod
-            platform_fee: Math.round(subtotal * 0.05 * 100) / 100, // 5% fee
-            seller_earnings: Math.round(subtotal * 0.95 * 100) / 100,
-          })
-          .select()
-          .single();
-
-        if (childError || !childOrder) throw childError || new Error('Failed to create child order');
-
-        // Insert Order Items
-        const orderItemsToInsert = storeItems.map((item) => ({
-          child_order_id: childOrder.id,
-          product_id: item.productId,
-          quantity: item.quantity,
-          unit_price: item.priceAtPurchase,
-          total_price: item.priceAtPurchase * item.quantity,
-          selected_options: item.variant,
-        }));
-
-        const { error: itemsError } = await supabase
-          .from('order_items')
-          .insert(orderItemsToInsert);
-
-        if (itemsError) throw itemsError;
-
-        placedOrders.push(childOrder);
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.message || 'Failed to place order transaction');
       }
 
-      // Clear user cart
+      const resData = await response.json();
+      if (!resData.success) {
+        throw new Error(resData.message || 'Failed to place order transaction');
+      }
+
+      // Clear user cart on the client side
       await clearCart();
 
-      return placedOrders;
+      return resData.data; // placedOrders array
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buyer-orders', userId] });
