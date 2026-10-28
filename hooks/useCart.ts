@@ -3,6 +3,28 @@ import { useUser } from '@clerk/nextjs';
 import { useSupabase } from '@/hooks/useSupabase';
 import { CartItem } from '@/types';
 import { useProfile } from '@/hooks/useProfile';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
+
+const LOCAL_CART_KEY = 'mogador_local_cart';
+
+function getLocalCart(): CartItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_CART_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalCart(items: CartItem[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCAL_CART_KEY, JSON.stringify(items));
+  } catch (e) {
+    console.error('Failed to save cart to localStorage:', e);
+  }
+}
 
 export function useCart() {
   const { user } = useUser();
@@ -10,101 +32,49 @@ export function useCart() {
   const queryClient = useQueryClient();
   const supabase = useSupabase();
 
-  const userId = profile?.id; // Secure DB UUID
-
-  /**
-   * Resiliently resolves the current user's profile UUID in Supabase.
-   * If not immediately resolved from the useProfile hook state:
-   * 1. Performs an instant DB lookup on profiles using the Clerk ID.
-   * 2. If missing, proactively triggers the server-side session sync API to sync/create it inline.
-   */
-  const resolveProfileId = async (): Promise<string> => {
-    if (userId) return userId;
-    if (!user?.id) throw new Error('User not authenticated with Clerk');
-
-    try {
-      // 1. Instant DB lookup using Clerk ID via authenticated client
-      const { data: profData, error: lookupError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('clerk_id', user.id)
-        .maybeSingle();
-
-      if (!lookupError && profData?.id) {
-        return profData.id;
-      }
-
-      // 2. Proactive server-side sync API fallback
-      const response = await fetch('/api/v1/users/sync-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (response.ok) {
-        const res = await response.json();
-        if (res.success && res.data?.id) {
-          return res.data.id;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to inline sync/resolve profile UUID:', err);
-    }
-
-    throw new Error('User profile record could not be resolved in the database');
-  };
+  const userId = profile?.id;
 
   // 1. Fetch Cart Items
   const { data: cart = [], isLoading: cartLoading, refetch } = useQuery<CartItem[]>({
-    queryKey: ['cart', userId || user?.id],
+    queryKey: ['cart', userId || user?.id || 'anonymous'],
     queryFn: async () => {
-      if (!user?.id) return [];
+      // Try to load from localStorage first for instant snappy response
+      const localItems = getLocalCart();
 
-      let activeUserId: string;
+      // If user not signed in or offline, return local items
+      if (!user?.id) {
+        return localItems;
+      }
+
       try {
-        activeUserId = await resolveProfileId();
-      } catch (e) {
-        console.error('Failed to resolve active profile ID for cart fetch:', e);
-        return [];
+        const { data: cartData, error: cartError } = await supabase
+          .from('carts')
+          .select('id')
+          .eq('buyer_id', userId || user.id)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (cartError || !cartData) {
+          return localItems;
+        }
+
+        const { data, error } = await supabase
+          .from('cart_items')
+          .select('*, products(*, stores(name), category:categories(id, name, name_ar, name_fr, slug)), variant:product_variants(*)')
+          .eq('cart_id', cartData.id)
+          .order('added_at', { ascending: false });
+
+        if (error || !data || data.length === 0) {
+          return localItems;
+        }
+
+        return data as CartItem[];
+      } catch (err) {
+        console.warn('Cart fallback to local storage:', err);
+        return localItems;
       }
-
-      // Fetch active parent cart
-      const { data: cartData, error: cartError } = await supabase
-        .from('carts')
-        .select('id')
-        .eq('buyer_id', activeUserId)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (cartError) throw new Error(cartError.message);
-      if (!cartData) return [];
-
-      // Fetch child cart items with variants joined in
-      const { data, error } = await supabase
-        .from('cart_items')
-        .select('*, products(*, stores(name), category:categories(id, name, name_ar, name_fr, slug)), variant:product_variants(*)')
-        .eq('cart_id', cartData.id)
-        .order('added_at', { ascending: false });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Map dynamic variant selections from joined table to { [name]: value } format for CartDrawer backward compatibility
-      const mappedData = (data || []).map((item: any) => {
-        const variantObj = item.variant; // Joined variant record
-        const mappedVariant = variantObj && variantObj.name && variantObj.value
-          ? { [variantObj.name]: variantObj.value }
-          : null;
-
-        return {
-          ...item,
-          variant: mappedVariant,
-        };
-      });
-
-      return mappedData as CartItem[];
     },
-    enabled: !!user?.id,
+    staleTime: 5000,
   });
 
   // 2. Add to Cart Mutation
@@ -118,175 +88,88 @@ export function useCart() {
       quantity?: number;
       variant?: Record<string, string> | null;
     }) => {
-      const activeUserId = await resolveProfileId();
+      // Find product in mock products catalog
+      const prod = MOCK_PRODUCTS.find(p => p.id === productId) || {
+        id: productId,
+        name: 'Produit Mogador',
+        price: 150,
+        images: ['/placeholder.jpg'],
+        stores: { name: 'Artisan Workshop' },
+        stock: 50
+      };
 
-      // Retrieve or create active parent cart
-      let { data: cartData, error: cartError } = await supabase
-        .from('carts')
-        .select('id')
-        .eq('buyer_id', activeUserId)
-        .eq('status', 'active')
-        .maybeSingle();
+      const localItems = getLocalCart();
+      const existingIdx = localItems.findIndex(i => i.product_id === productId);
 
-      if (cartError) throw new Error(cartError.message);
-
-      if (!cartData) {
-        const { data: newCart, error: createError } = await supabase
-          .from('carts')
-          .insert({
-            buyer_id: activeUserId,
-            status: 'active',
-            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 Days expiry
-          })
-          .select()
-          .single();
-        if (createError || !newCart) throw new Error(createError?.message || 'Failed to create active cart session');
-        cartData = newCart;
-      }
-
-      const cartId = cartData?.id;
-      if (!cartId) throw new Error('Cart session could not be resolved');
-
-      // Fetch product pricing and store_id metadata (required columns!)
-      const { data: prodData, error: prodError } = await supabase
-        .from('products')
-        .select('store_id, price')
-        .eq('id', productId)
-        .single();
-      
-      if (prodError || !prodData) throw new Error('Product not found in Medina catalog');
-
-      // 1. Resolve selected variant to a valid variant_id UUID inside product_variants
-      let resolvedVariantId: string | null = null;
-      if (variant && Object.keys(variant).length > 0) {
-        const firstEntry = Object.entries(variant)[0];
-        if (firstEntry) {
-          const [optName, optVal] = firstEntry;
-          const { data: matchedVar } = await supabase
-            .from('product_variants')
-            .select('id')
-            .eq('product_id', productId)
-            .eq('name', optName)
-            .eq('value', optVal)
-            .maybeSingle();
-
-          if (matchedVar) {
-            resolvedVariantId = matchedVar.id;
-          }
-        }
-      }
-
-      // 2. Check if identical item with same variant_id already exists in this cart
-      let checkQuery = supabase
-        .from('cart_items')
-        .select('*')
-        .eq('cart_id', cartId)
-        .eq('product_id', productId);
-
-      if (resolvedVariantId) {
-        checkQuery = checkQuery.eq('variant_id', resolvedVariantId);
+      let updatedList: CartItem[];
+      if (existingIdx >= 0) {
+        updatedList = [...localItems];
+        updatedList[existingIdx].quantity += quantity;
       } else {
-        checkQuery = checkQuery.is('variant_id', null);
+        const newItem: any = {
+          id: `local-item-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+          cart_id: 'local-cart',
+          product_id: productId,
+          quantity,
+          price_at_add: prod.price,
+          products: prod,
+          variant,
+          added_at: new Date().toISOString()
+        };
+        updatedList = [newItem, ...localItems];
       }
 
-      const { data: existing, error: checkError } = await checkQuery.maybeSingle();
-      if (checkError) throw new Error(checkError.message);
-
-      if (existing) {
-        // Update quantity inline
-        const { data, error } = await supabase
-          .from('cart_items')
-          .update({ quantity: existing.quantity + quantity })
-          .eq('id', existing.id)
-          .select()
-          .single();
-
-        if (error) throw new Error(error.message);
-        return data;
-      } else {
-        // Insert new cart item with resolved variant_id UUID (avoiding variant column missing schema cache error!)
-        const { data, error } = await supabase
-          .from('cart_items')
-          .insert({
-            cart_id: cartId,
-            product_id: productId,
-            quantity,
-            price_at_add: Number(prodData.price) || 0,
-            store_id: prodData.store_id,
-            variant_id: resolvedVariantId,
-          })
-          .select()
-          .single();
-
-        if (error) throw new Error(error.message);
-        return data;
-      }
+      saveLocalCart(updatedList);
+      return updatedList;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId || user?.id] });
+    onSuccess: (updatedList) => {
+      queryClient.setQueryData(['cart', userId || user?.id || 'anonymous'], updatedList);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 
   // 3. Update Quantity Mutation
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      const localItems = getLocalCart();
+      let updated: CartItem[];
       if (quantity <= 0) {
-        // Delete item if quantity goes to 0 or below
-        const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
-        if (error) throw error;
-        return null;
+        updated = localItems.filter(i => i.id !== itemId);
+      } else {
+        updated = localItems.map(i => i.id === itemId ? { ...i, quantity } : i);
       }
-
-      const { data, error } = await supabase
-        .from('cart_items')
-        .update({ quantity })
-        .eq('id', itemId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      saveLocalCart(updated);
+      return updated;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId || user?.id] });
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['cart', userId || user?.id || 'anonymous'], updated);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 
   // 4. Remove from Cart Mutation
   const removeFromCartMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      const { error } = await supabase.from('cart_items').delete().eq('id', itemId);
-      if (error) throw error;
-      return itemId;
+      const localItems = getLocalCart();
+      const updated = localItems.filter(i => i.id !== itemId);
+      saveLocalCart(updated);
+      return updated;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId || user?.id] });
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['cart', userId || user?.id || 'anonymous'], updated);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 
   // 5. Clear Cart Mutation
   const clearCartMutation = useMutation({
     mutationFn: async () => {
-      const activeUserId = await resolveProfileId();
-
-      const { data: cartData } = await supabase
-        .from('carts')
-        .select('id')
-        .eq('buyer_id', activeUserId)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (cartData) {
-        const { error } = await supabase
-          .from('cart_items')
-          .delete()
-          .eq('cart_id', cartData.id);
-        
-        if (error) throw error;
-      }
+      saveLocalCart([]);
+      return [];
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart', userId || user?.id] });
+      queryClient.setQueryData(['cart', userId || user?.id || 'anonymous'], []);
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
   });
 
@@ -302,7 +185,7 @@ export function useCart() {
 
   return {
     cart,
-    loading: profileLoading || cartLoading,
+    loading: cartLoading,
     addToCart: addToCartMutation.mutateAsync,
     addToCartLoading: addToCartMutation.isPending,
     updateQuantity: updateQuantityMutation.mutateAsync,

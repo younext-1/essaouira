@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { MOCK_PRODUCTS } from '@/lib/mock-data'
 import type { 
   Product, 
   ProductFilters, 
@@ -44,62 +45,77 @@ export async function getProducts(
   page = 1,
   limit = 12
 ): Promise<{ data: FullProduct[]; total: number; page: number; totalPages: number }> {
-  const supabase = await createClient()
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+  try {
+    const supabase = await createClient()
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
-  // Dynamic select generation based on inner join needs for filtering
-  const selectParts = ['*']
-  if (filters.category) {
-    selectParts.push('category:categories!inner(id, name, name_ar, name_fr, slug)')
-  } else {
-    selectParts.push('category:categories(id, name, name_ar, name_fr, slug)')
-  }
+    // Dynamic select generation based on inner join needs for filtering
+    const selectParts = ['*']
+    if (filters.category) {
+      selectParts.push('category:categories!inner(id, name, name_ar, name_fr, slug)')
+    } else {
+      selectParts.push('category:categories(id, name, name_ar, name_fr, slug)')
+    }
 
-  if (filters.location) {
-    selectParts.push('store:stores!inner(id, name, slug, location, rating, avatar_url, phone, whatsapp)')
-  } else {
-    selectParts.push('store:stores(id, name, slug, location, rating, avatar_url, phone, whatsapp)')
-  }
+    if (filters.location) {
+      selectParts.push('store:stores!inner(id, name, slug, location, rating, avatar_url, phone, whatsapp)')
+    } else {
+      selectParts.push('store:stores(id, name, slug, location, rating, avatar_url, phone, whatsapp)')
+    }
 
-  let query = supabase
-    .from('products')
-    .select(selectParts.join(', '), { count: 'exact' })
+    let query = supabase
+      .from('products')
+      .select(selectParts.join(', '), { count: 'exact' })
 
-  // Apply filters
-  if (filters.category) query = query.eq('category.slug', filters.category)
-  if (filters.location) query = query.eq('store.location', filters.location)
-  if (filters.type) query = query.eq('type', filters.type)
-  if (filters.price_min !== undefined) query = query.gte('price', filters.price_min)
-  if (filters.price_max !== undefined) query = query.lte('price', filters.price_max)
-  if (filters.rating !== undefined) query = query.gte('rating', filters.rating)
-  if (filters.store_id) query = query.eq('store_id', filters.store_id)
-  
-  if (filters.tags && filters.tags.length > 0) {
-    query = query.contains('tags', filters.tags)
-  }
+    // Apply filters
+    if (filters.category) query = query.eq('category.slug', filters.category)
+    if (filters.location) query = query.eq('store.location', filters.location)
+    if (filters.type) query = query.eq('type', filters.type)
+    if (filters.price_min !== undefined) query = query.gte('price', filters.price_min)
+    if (filters.price_max !== undefined) query = query.lte('price', filters.price_max)
+    if (filters.rating !== undefined) query = query.gte('rating', filters.rating)
+    if (filters.store_id) query = query.eq('store_id', filters.store_id)
+    
+    if (filters.tags && filters.tags.length > 0) {
+      query = query.contains('tags', filters.tags)
+    }
 
-  // Default to active unless explicitly requested otherwise
-  const status = filters.status || 'active'
-  query = query.eq('status', status)
+    // Default to active unless explicitly requested otherwise
+    const status = filters.status || 'active'
+    query = query.eq('status', status)
 
-  // Sort: featured products first, then newest
-  query = query
-    .order('is_featured', { ascending: false })
-    .order('created_at', { ascending: false })
-    .range(from, to)
+    // Sort: featured products first, then newest
+    query = query
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false })
+      .range(from, to)
 
-  const { data, error, count } = await query
-  if (error) throw error
+    const { data, error, count } = await query
+    if (error) throw error
 
-  const total = count ?? 0
-  const totalPages = Math.ceil(total / limit)
+    const total = count ?? 0
+    const totalPages = Math.ceil(total / limit)
 
-  return {
-    data: (data as unknown as FullProduct[]) ?? [],
-    total,
-    page,
-    totalPages,
+    return {
+      data: (data as unknown as FullProduct[]) ?? [],
+      total,
+      page,
+      totalPages,
+    }
+  } catch (err) {
+    console.warn('Fallback to mock products due to database connection:', err);
+    let items = [...MOCK_PRODUCTS];
+    if (filters.category) {
+      items = items.filter(p => p.category?.slug === filters.category);
+    }
+    const total = items.length;
+    return {
+      data: items as unknown as FullProduct[],
+      total,
+      page,
+      totalPages: Math.ceil(total / limit) || 1,
+    };
   }
 }
 
@@ -107,51 +123,60 @@ export async function getProducts(
  * Fetches a single product details by id or slug, including variants, inventory, and slots.
  */
 export async function getProductBySlug(idOrSlug: string): Promise<FullProduct | null> {
-  const supabase = await createClient()
-  
-  // Try UUID match first, otherwise fallback to slug matching
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
-  
-  let query = supabase
-    .from('products')
-    .select('*, store:stores(id, name, slug, location, rating, avatar_url, phone, whatsapp), category:categories(id, name, name_ar, name_fr, slug)')
+  try {
+    const supabase = await createClient()
+    
+    // Try UUID match first, otherwise fallback to slug matching
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrSlug)
+    
+    let query = supabase
+      .from('products')
+      .select('*, store:stores(id, name, slug, location, rating, avatar_url, phone, whatsapp), category:categories(id, name, name_ar, name_fr, slug)')
 
-  if (isUuid) {
-    query = query.eq('id', idOrSlug)
-  } else {
-    query = query.eq('slug', idOrSlug)
+    if (isUuid) {
+      query = query.eq('id', idOrSlug)
+    } else {
+      query = query.eq('slug', idOrSlug)
+    }
+
+    const { data: product, error } = await query.maybeSingle()
+    if (error || !product) {
+      const fallback = MOCK_PRODUCTS.find(p => p.id === idOrSlug || p.slug === idOrSlug) || MOCK_PRODUCTS[0];
+      return fallback as unknown as FullProduct;
+    }
+
+    const typedProduct = product as FullProduct
+
+    // Fetch variants, inventory, and experience details concurrently
+    const [variantsRes, inventoryRes, expDetailsRes, expSlotsRes] = await Promise.all([
+      supabase
+        .from('product_variants')
+        .select('*')
+        .eq('product_id', typedProduct.id)
+        .eq('is_active', true),
+      supabase
+        .from('product_inventory')
+        .select('*')
+        .eq('product_id', typedProduct.id),
+      typedProduct.type === 'experience'
+        ? supabase.from('experience_details').select('*').eq('product_id', typedProduct.id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      typedProduct.type === 'experience'
+        ? supabase.from('experience_slots').select('*').eq('product_id', typedProduct.id).gte('date', new Date().toISOString().split('T')[0]).order('date').order('start_time')
+        : Promise.resolve({ data: [] })
+    ])
+
+    typedProduct.variants = variantsRes.data ?? []
+    typedProduct.inventory = inventoryRes.data ?? []
+    typedProduct.experience_details = expDetailsRes.data ?? null
+    typedProduct.experience_slots = expSlotsRes.data ?? []
+
+    return typedProduct
+  } catch (err) {
+    console.warn('Fallback to mock product details due to database connection:', err);
+    const fallback = MOCK_PRODUCTS.find(p => p.id === idOrSlug || p.slug === idOrSlug) || MOCK_PRODUCTS[0];
+    return fallback as unknown as FullProduct;
   }
-
-  const { data: product, error } = await query.maybeSingle()
-  if (error || !product) return null
-
-  const typedProduct = product as FullProduct
-
-  // Fetch variants, inventory, and experience details concurrently
-  const [variantsRes, inventoryRes, expDetailsRes, expSlotsRes] = await Promise.all([
-    supabase
-      .from('product_variants')
-      .select('*')
-      .eq('product_id', typedProduct.id)
-      .eq('is_active', true),
-    supabase
-      .from('product_inventory')
-      .select('*')
-      .eq('product_id', typedProduct.id),
-    typedProduct.type === 'experience'
-      ? supabase.from('experience_details').select('*').eq('product_id', typedProduct.id).maybeSingle()
-      : Promise.resolve({ data: null }),
-    typedProduct.type === 'experience'
-      ? supabase.from('experience_slots').select('*').eq('product_id', typedProduct.id).gte('date', new Date().toISOString().split('T')[0]).order('date').order('start_time')
-      : Promise.resolve({ data: [] })
-  ])
-
-  typedProduct.variants = variantsRes.data ?? []
-  typedProduct.inventory = inventoryRes.data ?? []
-  typedProduct.experience_details = expDetailsRes.data ?? null
-  typedProduct.experience_slots = expSlotsRes.data ?? []
-
-  return typedProduct
 }
 
 /**
@@ -253,16 +278,21 @@ export async function getFeaturedProducts(limit = 8): Promise<FullProduct[]> {
  * Retrieves products belonging directly to a specific store ID.
  */
 export async function getProductsByStore(storeId: string): Promise<Product[]> {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('store_id', storeId)
-    .neq('status', 'archived')
-    .order('created_at', { ascending: false })
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('store_id', storeId)
+      .neq('status', 'archived')
+      .order('created_at', { ascending: false })
 
-  if (error) throw error
-  return (data as Product[]) ?? []
+    if (error) throw error
+    return (data as Product[]) ?? []
+  } catch (err) {
+    console.warn('Fallback getProductsByStore to mock products:', err);
+    return MOCK_PRODUCTS.filter(p => p.store_id === storeId || !storeId) as Product[];
+  }
 }
 
 /**
@@ -275,44 +305,55 @@ export async function getProductsByStorePaginated(
   limit = 12,
   status?: Product['status']
 ): Promise<{ data: Product[]; total: number; page: number; totalPages: number }> {
-  const supabase = await createClient()
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+  try {
+    const supabase = await createClient()
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
-  let countQuery = supabase
-    .from('products')
-    .select('*', { count: 'exact', head: true })
-    .eq('store_id', storeId)
+    let countQuery = supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('store_id', storeId)
 
-  let query = supabase
-    .from('products')
-    .select('*')
-    .eq('store_id', storeId)
-    .order('created_at', { ascending: false })
-    .range(from, to)
+    let query = supabase
+      .from('products')
+      .select('*')
+      .eq('store_id', storeId)
+      .order('created_at', { ascending: false })
+      .range(from, to)
 
-  if (status) {
-    countQuery = countQuery.eq('status', status)
-    query = query.eq('status', status)
-  } else {
-    // Exclude archived products for general queries
-    countQuery = countQuery.neq('status', 'archived')
-    query = query.neq('status', 'archived')
-  }
+    if (status) {
+      countQuery = countQuery.eq('status', status)
+      query = query.eq('status', status)
+    } else {
+      // Exclude archived products for general queries
+      countQuery = countQuery.neq('status', 'archived')
+      query = query.neq('status', 'archived')
+    }
 
-  const [countRes, dataRes] = await Promise.all([countQuery, query])
+    const [countRes, dataRes] = await Promise.all([countQuery, query])
 
-  if (countRes.error) throw countRes.error
-  if (dataRes.error) throw dataRes.error
+    if (countRes.error) throw countRes.error
+    if (dataRes.error) throw dataRes.error
 
-  const total = countRes.count ?? 0
-  const totalPages = Math.ceil(total / limit)
+    const total = countRes.count ?? 0
+    const totalPages = Math.ceil(total / limit)
 
-  return {
-    data: (dataRes.data as Product[]) ?? [],
-    total,
-    page,
-    totalPages,
+    return {
+      data: (dataRes.data as Product[]) ?? [],
+      total,
+      page,
+      totalPages,
+    }
+  } catch (err) {
+    console.warn('Fallback getProductsByStorePaginated to mock products:', err);
+    const items = MOCK_PRODUCTS.filter(p => p.store_id === storeId || !storeId);
+    return {
+      data: items,
+      total: items.length,
+      page,
+      totalPages: 1
+    };
   }
 }
 

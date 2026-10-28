@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Store } from '@/types';
+import { MOCK_STORES } from '@/lib/mock-data';
 
 export function useStore(identifier: string | undefined) {
   const [store, setStore] = useState<Store | null>(null);
@@ -13,55 +13,42 @@ export function useStore(identifier: string | undefined) {
       return;
     }
 
-    async function fetchStore() {
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        // Detect if the identifier is a UUID or a URL slug
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier as string);
+      const found = MOCK_STORES.find(
+        s => s.id === identifier || s.slug === identifier
+      ) || MOCK_STORES[0];
 
-        const { data, error: fetchError } = await supabase
-          .from('stores')
-          .select('*, profiles(full_name), products(id)')
-          .eq(isUuid ? 'id' : 'slug', identifier as string)
-          .maybeSingle();
-
-        if (fetchError) {
-          throw fetchError;
-        }
-
-        if (data) {
-          const formattedStore: Store = {
-            id: data.id,
-            owner_id: data.owner_id,
-            name: data.name,
-            slug: data.slug,
-            description: data.description,
-            logo_url: data.logo_url,
-            banner_url: data.banner_url || null,
-            category: data.category,
-            location: data.location || 'Essaouira Medina',
-            total_sales: data.total_sales || 0,
-            rating: data.rating || 0,
-            review_count: data.review_count || 0,
-            created_at: data.created_at,
-            product_count: data.products ? data.products.length : 0,
-            owner_name: data.profiles ? data.profiles.full_name : 'Local Artisan',
-          };
-          setStore(formattedStore);
-        } else {
-          setStore(null);
-        }
-      } catch (err: any) {
-        console.error(`Error fetching store ${identifier}:`, err);
-        setError(err.message || 'Failed to fetch store');
-      } finally {
-        setLoading(false);
+      if (found) {
+        const formattedStore: Store = {
+          id: found.id,
+          owner_id: found.owner_id,
+          name: found.name,
+          slug: found.slug,
+          description: found.description,
+          logo_url: found.logo_url,
+          banner_url: found.banner_url || null,
+          category: found.category,
+          location: found.location || 'Essaouira Medina',
+          total_sales: found.total_sales || 0,
+          rating: found.rating || 4.9,
+          review_count: found.review_count || 120,
+          created_at: found.created_at || new Date().toISOString(),
+          product_count: found.products ? found.products.length : 3,
+          owner_name: (found.profiles && found.profiles.full_name) ? found.profiles.full_name : 'Local Artisan',
+        };
+        setStore(formattedStore);
+      } else {
+        setStore(null);
       }
+    } catch (err: any) {
+      console.error(`Error loading store ${identifier}:`, err);
+      setError(err.message || 'Failed to fetch store');
+    } finally {
+      setLoading(false);
     }
-
-    fetchStore();
   }, [identifier]);
 
   return { store, loading, error };

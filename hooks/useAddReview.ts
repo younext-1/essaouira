@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { useUser } from '@clerk/nextjs';
 
 interface AddReviewParams {
@@ -7,6 +6,7 @@ interface AddReviewParams {
   rating: number;
   title: string;
   body: string;
+  images?: string[];
 }
 
 export function useAddReview() {
@@ -14,75 +14,30 @@ export function useAddReview() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ productId, rating, title, body }: AddReviewParams) => {
-      if (!user) {
-        throw new Error('You must be signed in to submit a review.');
-      }
-
-      // Resolve Clerk User ID to Supabase profiles UUID
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('clerk_id', user.id)
-        .maybeSingle();
-
-      if (profileError || !profile) {
-        throw new Error('Failed to locate your buyer profile. Please sign in again.');
-      }
-
-      // 2. Look up a completed or delivered order for this product by this user
-      const { data: parentOrders, error: parentErr } = await supabase
-        .from('parent_orders')
-        .select('id')
-        .eq('buyer_id', profile.id);
-
-      if (parentErr || !parentOrders || parentOrders.length === 0) {
-        throw new Error('You can only review products you have purchased and that have been delivered.');
-      }
-
-      const parentIds = parentOrders.map(po => po.id);
-      const { data: childOrders, error: childErr } = await supabase
-        .from('child_orders')
-        .select('id')
-        .in('parent_id', parentIds)
-        .in('status', ['delivered', 'completed']);
-
-      if (childErr || !childOrders || childOrders.length === 0) {
-        throw new Error('You can only review products you have purchased and that have been delivered.');
-      }
-
-      const childIds = childOrders.map(co => co.id);
-      const { data: orderItem, error: itemErr } = await supabase
-        .from('order_items')
-        .select('child_order_id')
-        .eq('product_id', productId)
-        .in('child_order_id', childIds)
-        .limit(1)
-        .maybeSingle();
-
-      if (itemErr || !orderItem) {
-        throw new Error('You can only review products you have purchased and that have been delivered.');
-      }
-
-      // 3. Insert review into product_reviews
-      const { data, error } = await supabase
-        .from('product_reviews')
-        .insert({
-          child_order_id: orderItem.child_order_id,
-          product_id: productId,
-          buyer_id: profile.id,
+    mutationFn: async ({ productId, rating, title, body, images = [] }: AddReviewParams) => {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId,
+          clerkUserId: user?.id || null,
           rating,
           title,
           body,
-        })
-        .select()
-        .single();
+          userName: user?.fullName || 'زائر موكادور',
+          images,
+        }),
+      });
 
-      if (error) {
-        throw new Error(error.message);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to submit review.');
       }
 
-      return data;
+      return data.review;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['product', variables.productId] });

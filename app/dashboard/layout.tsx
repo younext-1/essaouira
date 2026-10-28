@@ -7,7 +7,7 @@ import { useMyStore } from '@/hooks/useMyStore';
 import StoreSetupWizard from '@/components/store/StoreSetupWizard';
 import { 
   LayoutDashboard, Package, ShoppingCart, BarChart3, Store, 
-  ArrowLeft, Loader2, Menu, X, ArrowUpRight, ShieldAlert 
+  ArrowLeft, Loader2, Menu, X, ArrowUpRight, ShieldAlert, MessageCircle 
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -96,6 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard/orders', label: 'Orders', icon: ShoppingCart },
     { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/dashboard/store', label: 'Store Profile', icon: Store },
+    { href: '/dashboard/whatsapp', label: 'WhatsApp', icon: MessageCircle },
   ];
 
   const handleNavClick = (href: string) => {

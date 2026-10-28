@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useProducts } from '@/hooks/useProducts';
 import ProductCard from '@/components/ProductCard';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { MOCK_STORES } from '@/lib/mock-data';
 import Link from 'next/link';
 import { Compass, Sparkles, Loader2, ArrowRight, Store as StoreIcon, ShieldCheck, HeartHandshake, MapPin, ChevronRight, ShoppingCart } from 'lucide-react';
 import { useUser, SignInButton } from '@clerk/nextjs';
@@ -45,12 +45,7 @@ function HomePageContent() {
   const { data: stores = [], isLoading: storesLoading } = useQuery({
     queryKey: ['vetted-stores'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('stores')
-        .select('*, profiles(full_name), products(id, name, price, images, thumbnail_url)')
-        .limit(6);
-      if (error) throw error;
-      return data || [];
+      return MOCK_STORES;
     }
   });
 

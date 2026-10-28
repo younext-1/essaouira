@@ -3,7 +3,7 @@
 import { use } from 'react';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { useStore } from '@/hooks/useStore';
 import ProductCard from '@/components/ProductCard';
 import { 
@@ -46,22 +46,24 @@ export default function StorePage({ params }: StorePageProps) {
     }
   }, [store]);
 
-  // Fetch store products based on filters
+  // Fetch store products based on filters from mock dataset
   const { data: products = [], isLoading: productsLoading } = useQuery<any[]>({
-    queryKey: ['store-products', store?.id, selectedCategory, sortBy],
+    queryKey: ['store-products', store?.id, store?.slug, selectedCategory, sortBy],
     queryFn: async () => {
-      if (!store?.id) return [];
+      if (!store) return [];
 
-      let query = supabase
-        .from('products')
-        .select('*, stores(name, slug), category:categories(id, name, name_ar, name_fr, slug)')
-        .eq('store_id', store.id);
+      let items = MOCK_PRODUCTS.filter((p: any) => 
+        p.store_id === store.id || 
+        p.stores?.slug === store.slug ||
+        (store.slug && p.store_id?.includes(store.slug.replace('mogador-', '')))
+      );
 
-      const { data, error } = await query;
-      if (error) throw error;
+      // If no exact store match, show sample products
+      if (items.length === 0) {
+        items = MOCK_PRODUCTS.slice(0, 4);
+      }
 
-      // Filter by category name client-side (no direct category text column on products)
-      let items = data || [];
+      // Filter by category name client-side
       if (selectedCategory && selectedCategory !== 'All') {
         const sel = selectedCategory.toLowerCase();
         items = items.filter((p: any) => {
@@ -83,11 +85,11 @@ export default function StorePage({ params }: StorePageProps) {
       } else if (sortBy === 'name') {
         items.sort((a: any, b: any) => a.name.localeCompare(b.name));
       } else {
-        items.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        items.sort((a: any, b: any) => new Date(b.created_at || '').getTime() - new Date(a.created_at || '').getTime());
       }
       return items;
     },
-    enabled: !!store?.id,
+    enabled: !!store,
   });
 
   if (storeLoading) {

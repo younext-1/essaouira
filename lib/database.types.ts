@@ -90,6 +90,7 @@ export interface Store {
   total_reviews?: number
   review_count?: number // for backward compatibility
   onboarding_completed?: boolean
+  ai_instructions?: string | null
   created_at?: string
   updated_at?: string
   deleted_at?: string | null

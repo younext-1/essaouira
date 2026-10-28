@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { Product } from '@/types';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
 
 interface UseProductsOptions {
   category?: string | null;
@@ -14,41 +14,88 @@ export function useProducts(options?: UseProductsOptions) {
   return useQuery<Product[]>({
     queryKey: ['products', category, search],
     queryFn: async () => {
-      // Join category:categories since products no longer has a `category` text column (migration 013)
-      let query = supabase
-        .from('products')
-        .select('*, stores(name, slug), category:categories(id, name, name_ar, name_fr, slug)');
+      // Simulate quick async load for snappy feel
+      let results = [...MOCK_PRODUCTS];
 
-      if (search) {
-        query = query.ilike('name', `%${search}%`);
+      // 1. Filter by search term
+      if (search && search.trim()) {
+        const q = search.trim().toLowerCase();
+        results = results.filter((p) => {
+          const matchName = p.name.toLowerCase().includes(q);
+          const matchNameAr = (p.name_ar || '').toLowerCase().includes(q);
+          const matchNameFr = (p.name_fr || '').toLowerCase().includes(q);
+          const matchDesc = (p.description || '').toLowerCase().includes(q);
+          const matchDescAr = (p.description_ar || '').toLowerCase().includes(q);
+          const matchTags = (p.tags || []).some(t => t.toLowerCase().includes(q));
+          const matchStore = (p.stores?.name || '').toLowerCase().includes(q);
+
+          return matchName || matchNameAr || matchNameFr || matchDesc || matchDescAr || matchTags || matchStore;
+        });
       }
 
-      // Sort by created_at desc (safe fallback if total_reviews column doesn't exist yet)
-      query = query.order('created_at', { ascending: false });
-
-      const { data, error } = await query;
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      let results = (data as Product[]) || [];
-
-      // Filter by category name client-side (no direct text column on products)
+      // 2. Filter by category
       if (category && category !== 'All') {
-        const search_lower = category.toLowerCase();
-        results = results.filter((p: any) => {
-          const cat = p.category;
-          if (!cat) return false;
-          return (
-            (cat.name || '').toLowerCase().includes(search_lower) ||
-            (cat.name_ar || '').toLowerCase().includes(search_lower) ||
-            (cat.name_fr || '').toLowerCase().includes(search_lower)
-          );
+        const catLow = category.toLowerCase().trim();
+
+        results = results.filter((p) => {
+          const c = p.category;
+          const catName = (c?.name || '').toLowerCase();
+          const catNameAr = (c?.name_ar || '').toLowerCase();
+          const catNameFr = (c?.name_fr || '').toLowerCase();
+          const catSlug = (c?.slug || '').toLowerCase();
+          const tags = (p.tags || []).map(t => t.toLowerCase());
+
+          // Direct inclusion check
+          if (
+            catName.includes(catLow) ||
+            catNameAr.includes(catLow) ||
+            catNameFr.includes(catLow) ||
+            catSlug.includes(catLow)
+          ) {
+            return true;
+          }
+
+          // Keyword semantic matching across alias naming
+          if ((catLow.includes('wood') || catLow.includes('thuya') || catLow.includes('artisan')) &&
+              (catName.includes('wood') || tags.includes('wood') || tags.includes('thuya'))) {
+            return true;
+          }
+          if ((catLow.includes('oil') || catLow.includes('cosmetic') || catLow.includes('argan')) &&
+              (catName.includes('oil') || tags.includes('argan') || tags.includes('cosmetics'))) {
+            return true;
+          }
+          if ((catLow.includes('rug') || catLow.includes('carpet') || catLow.includes('tapestr')) &&
+              (catName.includes('rug') || tags.includes('rug') || tags.includes('carpet'))) {
+            return true;
+          }
+          if ((catLow.includes('surf') || catLow.includes('water') || catLow.includes('gear')) &&
+              (catName.includes('surf') || tags.includes('surf') || tags.includes('kitesurf'))) {
+            return true;
+          }
+          if (catLow.includes('leather') &&
+              (catName.includes('leather') || tags.includes('leather'))) {
+            return true;
+          }
+          if ((catLow.includes('culinary') || catLow.includes('cooking') || catLow.includes('spice') || catLow.includes('food')) &&
+              (catName.includes('culinary') || tags.includes('culinary') || tags.includes('cooking class') || tags.includes('spices'))) {
+            return true;
+          }
+          if ((catLow.includes('excursion') || catLow.includes('tour') || catLow.includes('camel')) &&
+              (catName.includes('excursion') || tags.includes('tour') || tags.includes('camel'))) {
+            return true;
+          }
+          if ((catLow.includes('pottery') || catLow.includes('ceramic')) &&
+              (catName.includes('pottery') || tags.includes('pottery') || tags.includes('ceramic'))) {
+            return true;
+          }
+
+          return false;
         });
       }
 
       return results;
     },
+    // Instant initial data and cache
+    staleTime: Infinity,
   });
 }

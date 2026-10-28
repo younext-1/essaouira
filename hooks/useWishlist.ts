@@ -1,77 +1,75 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@clerk/nextjs';
-import { useSupabase } from '@/hooks/useSupabase';
 import { WishlistItem } from '@/types';
-import { useProfile } from '@/hooks/useProfile';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
+
+const LOCAL_WISHLIST_KEY = 'mogador_local_wishlist';
+
+function getLocalWishlist(): WishlistItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(LOCAL_WISHLIST_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalWishlist(items: WishlistItem[]) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(LOCAL_WISHLIST_KEY, JSON.stringify(items));
+  } catch (e) {
+    console.error('Failed to save wishlist to localStorage:', e);
+  }
+}
 
 export function useWishlist() {
   const { user } = useUser();
-  const { profile, loading: profileLoading } = useProfile(user?.id);
   const queryClient = useQueryClient();
-  const supabase = useSupabase();
-
-  const userId = profile?.id; // Secure DB UUID
 
   // 1. Fetch Wishlist Items
   const { data: wishlist = [], isLoading: wishlistLoading } = useQuery<WishlistItem[]>({
-    queryKey: ['wishlist', userId],
+    queryKey: ['wishlist', user?.id || 'anonymous'],
     queryFn: async () => {
-      if (!userId) return [];
-
-      const { data, error } = await supabase
-        .from('wishlist')
-        .select('*, products(*, stores(name))')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      return (data as WishlistItem[]) || [];
+      return getLocalWishlist();
     },
-    enabled: !!userId,
+    staleTime: 5000,
   });
 
   // 2. Toggle Wishlist Mutation
   const toggleWishlistMutation = useMutation({
     mutationFn: async (productId: string) => {
-      if (!userId) throw new Error('User profile not resolved');
+      const current = getLocalWishlist();
+      const existingIdx = current.findIndex((item) => item.product_id === productId);
 
-      // Check if item exists
-      const { data: existing, error: checkError } = await supabase
-        .from('wishlist')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('product_id', productId)
-        .maybeSingle();
+      let updated: WishlistItem[];
+      let added = false;
 
-      if (checkError) throw checkError;
-
-      if (existing) {
-        // Remove from wishlist
-        const { error } = await supabase
-          .from('wishlist')
-          .delete()
-          .eq('id', existing.id);
-
-        if (error) throw error;
-        return { productId, added: false };
+      if (existingIdx >= 0) {
+        // Remove
+        updated = current.filter((item) => item.product_id !== productId);
+        added = false;
       } else {
-        // Add to wishlist
-        const { error } = await supabase
-          .from('wishlist')
-          .insert({
-            user_id: userId,
-            product_id: productId,
-          });
-
-        if (error) throw error;
-        return { productId, added: true };
+        // Add
+        const prod = MOCK_PRODUCTS.find(p => p.id === productId);
+        const newItem: WishlistItem = {
+          id: `wish-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+          user_id: user?.id || 'guest',
+          product_id: productId,
+          created_at: new Date().toISOString(),
+          products: prod || undefined,
+        };
+        updated = [newItem, ...current];
+        added = true;
       }
+
+      saveLocalWishlist(updated);
+      return { productId, added, updated };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', userId] });
+    onSuccess: (result) => {
+      queryClient.setQueryData(['wishlist', user?.id || 'anonymous'], result.updated);
+      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
     },
   });
 
@@ -81,7 +79,7 @@ export function useWishlist() {
 
   return {
     wishlist,
-    loading: profileLoading || wishlistLoading,
+    loading: wishlistLoading,
     toggleWishlist: toggleWishlistMutation.mutateAsync,
     toggleWishlistLoading: toggleWishlistMutation.isPending,
     isInWishlist,

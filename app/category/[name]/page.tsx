@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import ProductCard from '@/components/ProductCard';
 import { ArrowLeft, Loader2, Sparkles, SlidersHorizontal, MapPin, ShieldCheck, Tag } from 'lucide-react';
 import Link from 'next/link';
@@ -23,28 +23,39 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   const [sortBy, setSortBy] = useState('newest');
   const [priceMax, setPriceMax] = useState<number>(3000);
 
-  // Query database products in this category.
-  // products.category is a FK to the categories table (no direct text column).
-  // We join category:categories and filter by name client-side.
+  // Products in this category from mock dataset
   const { data: products = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['category-products', decodedName],
     queryFn: async () => {
-      const { data, error: err } = await supabase
-        .from('products')
-        .select('*, stores(name, slug), category:categories(id, name, name_ar, name_fr, slug)')
-        .eq('status', 'active')
-        .not('category_id', 'is', null);
-      if (err) throw err;
-      // Filter client-side: match category name (EN / AR / FR) against route param
       const search = decodedName.toLowerCase();
-      return (data || []).filter((p: any) => {
+      return MOCK_PRODUCTS.filter((p: any) => {
         const cat = p.category;
-        if (!cat) return false;
-        return (
-          (cat.name || '').toLowerCase().includes(search) ||
-          (cat.name_ar || '').toLowerCase().includes(search) ||
-          (cat.name_fr || '').toLowerCase().includes(search)
-        );
+        const catName = (cat?.name || '').toLowerCase();
+        const catNameAr = (cat?.name_ar || '').toLowerCase();
+        const catNameFr = (cat?.name_fr || '').toLowerCase();
+        const catSlug = (cat?.slug || '').toLowerCase();
+        const tags = (p.tags || []).map((t: string) => t.toLowerCase());
+
+        if (
+          catName.includes(search) ||
+          catNameAr.includes(search) ||
+          catNameFr.includes(search) ||
+          catSlug.includes(search)
+        ) {
+          return true;
+        }
+
+        // Semantic matching
+        if ((search.includes('wood') || search.includes('thuya')) && (catName.includes('wood') || tags.includes('wood') || tags.includes('thuya'))) return true;
+        if ((search.includes('oil') || search.includes('cosmetic') || search.includes('argan')) && (catName.includes('oil') || tags.includes('argan'))) return true;
+        if ((search.includes('rug') || search.includes('carpet') || search.includes('tapestr')) && (catName.includes('rug') || tags.includes('rug'))) return true;
+        if ((search.includes('surf') || search.includes('water') || search.includes('gear')) && (catName.includes('surf') || tags.includes('surf'))) return true;
+        if (search.includes('leather') && (catName.includes('leather') || tags.includes('leather'))) return true;
+        if ((search.includes('culinary') || search.includes('cooking') || search.includes('food')) && (catName.includes('culinary') || tags.includes('culinary'))) return true;
+        if ((search.includes('tour') || search.includes('excursion')) && (catName.includes('excursion') || tags.includes('tour'))) return true;
+        if ((search.includes('pottery') || search.includes('ceramic')) && (catName.includes('pottery') || tags.includes('pottery'))) return true;
+
+        return false;
       });
     },
   });

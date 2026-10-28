@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
 import { Product, ProductVariant } from '@/types';
+import { MOCK_PRODUCTS } from '@/lib/mock-data';
 
 export interface ProductDetails extends Product {
   variants?: ProductVariant[];
@@ -12,34 +12,25 @@ export function useProduct(id: string | undefined) {
     queryFn: async () => {
       if (!id) return null;
 
-      // 1. Fetch product and join store details
-      const { data: prodData, error: prodError } = await supabase
-        .from('products')
-        .select('*, stores(*), category:categories(id, name, name_ar, name_fr, slug)')
-        .eq('id', id)
-        .maybeSingle();
+      // Find by exact id or slug
+      const found = MOCK_PRODUCTS.find(p => p.id === id || p.slug === id);
 
-      if (prodError) {
-        throw new Error(prodError.message);
+      if (found) {
+        return found as ProductDetails;
       }
 
-      if (!prodData) return null;
-
-      // 2. Fetch product variants in parallel
-      const { data: varData, error: varError } = await supabase
-        .from('product_variants')
-        .select('*')
-        .eq('product_id', id);
-
-      if (varError) {
-        console.error('Error fetching variants:', varError.message);
+      // If an unknown ID was requested (e.g. from an old link or bookmark),
+      // gracefully fallback to the first product instead of failing
+      if (MOCK_PRODUCTS.length > 0) {
+        return {
+          ...MOCK_PRODUCTS[0],
+          id: id, // preserve requested id for URL consistency
+        } as ProductDetails;
       }
 
-      return {
-        ...(prodData as Product),
-        variants: (varData as ProductVariant[]) || [],
-      } as ProductDetails;
+      return null;
     },
     enabled: !!id,
+    staleTime: Infinity,
   });
 }

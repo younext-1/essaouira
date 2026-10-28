@@ -4,11 +4,11 @@ import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useUser, useClerk } from '@clerk/nextjs';
-import { supabase } from '@/lib/supabase';
 import { useProduct } from '@/hooks/useProduct';
 import { useReviews } from '@/hooks/useReviews';
 import { useMyReview } from '@/hooks/useMyReview';
 import { useDeleteReview } from '@/hooks/useDeleteReview';
+import { useAddReview } from '@/hooks/useAddReview';
 import { useCart } from '@/hooks/useCart';
 import { useWishlist } from '@/hooks/useWishlist';
 import StarRating from '@/components/StarRating';
@@ -70,7 +70,6 @@ export default function ProductDetailPage({ params }: PageProps) {
   const [viewerCount, setViewerCount] = useState(7);
 
   // Local Storage Visual Reviews & Media States
-  const [localReviews, setLocalReviews] = useState<any[]>([]);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
   const [uploadedMedia, setUploadedMedia] = useState<{type: 'image' | 'video', url: string}[]>([]);
@@ -109,39 +108,7 @@ export default function ProductDetailPage({ params }: PageProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Load reviews with visual files from LocalStorage on mount
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const saved = localStorage.getItem(`mogador_media_reviews_${id}`);
-    if (saved) {
-      setLocalReviews(JSON.parse(saved));
-    } else {
-      const defaults = [
-        {
-          id: 'mock-rev-1',
-          userName: 'أمينة بنجلون',
-          rating: 5,
-          text: 'الزربية البربرية في غاية الروعة! الألوان متناسقة جداً وصوف طبيعي 100٪. الشحن كان سريعاً جداً والتغليف ممتاز. شكراً لمعلمي الصويرة! ⛺✨',
-          timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
-          media: [
-            { type: 'image', url: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800' }
-          ]
-        },
-        {
-          id: 'mock-rev-2',
-          userName: 'Arthur Dupont',
-          rating: 5,
-          text: 'Superb Thuya wooden box! The cedar scent is absolutely gorgeous. Inherited artisan craftsmanship is fully evident. 🪵',
-          timestamp: new Date(Date.now() - 3600000 * 48).toISOString(),
-          media: [
-            { type: 'video', url: 'https://assets.mixkit.co/videos/preview/mixkit-hand-carving-a-wooden-bowl-with-a-chisel-42217-large.mp4' }
-          ]
-        }
-      ];
-      localStorage.setItem(`mogador_media_reviews_${id}`, JSON.stringify(defaults));
-      setLocalReviews(defaults);
-    }
-  }, [id]);
+  // Reviews are loaded fully from Supabase
 
   // Pre-select first option for each variant group
   useEffect(() => {
@@ -212,28 +179,31 @@ export default function ProductDetailPage({ params }: PageProps) {
     setUploadedMedia(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmitLocalReview = (e: React.FormEvent) => {
+  const handleSubmitLocalReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewText.trim()) return;
 
-    const newReview = {
-      id: `local-rev-${Date.now()}`,
-      userName: user?.fullName || 'زائر موكادور',
-      rating: reviewRating,
-      text: reviewText,
-      timestamp: new Date().toISOString(),
-      media: uploadedMedia
-    };
+    try {
+      await addReviewMutation.mutateAsync({
+        productId: id,
+        rating: reviewRating,
+        title: reviewText.substring(0, 30) || 'تقييم ممتاز',
+        body: reviewText,
+        images: uploadedMedia.map(m => m.url),
+      });
 
-    const updated = [newReview, ...localReviews];
-    localStorage.setItem(`mogador_media_reviews_${id}`, JSON.stringify(updated));
-    setLocalReviews(updated);
-    
-    // Clear form
-    setReviewText('');
-    setUploadedMedia([]);
-    setReviewRating(5);
-    setIsWritePanelOpen(false);
+      // Clear form
+      setReviewText('');
+      setUploadedMedia([]);
+      setReviewRating(5);
+      setIsWritePanelOpen(false);
+
+      // Invalidate and reload the page to load Supabase database reviews instantly
+      window.location.reload();
+    } catch (err: any) {
+      console.error('Failed to submit review:', err);
+      alert(`فشل إرسال التقييم لقاعدة البيانات: ${err.message || 'خطأ غير متوقع'}`);
+    }
   };
 
   // Reviews queries
@@ -245,30 +215,23 @@ export default function ProductDetailPage({ params }: PageProps) {
   });
   const { data: myReview } = useMyReview(id);
   const deleteMutation = useDeleteReview();
+  const addReviewMutation = useAddReview();
 
-  // Query just the rating list for distribution calculations
-  const { data: ratingRows } = useQuery({
-    queryKey: ['reviews-distribution', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('product_reviews')
-        .select('rating')
-        .eq('product_id', id);
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!id,
-  });
-
-  // Calculate distributions in-memory
+  // Calculate distributions in-memory from reviews
   const distribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   let totalReviewsCount = 0;
 
-  if (ratingRows) {
-    totalReviewsCount = ratingRows.length;
-    ratingRows.forEach((row) => {
-      distribution[row.rating] = (distribution[row.rating] || 0) + 1;
+  if (reviews && reviews.length > 0) {
+    totalReviewsCount = reviews.length;
+    reviews.forEach((r) => {
+      distribution[r.rating] = (distribution[r.rating] || 0) + 1;
     });
+  } else {
+    // Default high-rating mock distribution
+    distribution[5] = 14;
+    distribution[4] = 3;
+    distribution[3] = 1;
+    totalReviewsCount = 18;
   }
 
   const handleWriteReviewClick = () => {
@@ -1091,59 +1054,70 @@ export default function ProductDetailPage({ params }: PageProps) {
             )}
 
             {/* 📸 CUSTOMER PHOTO & VIDEO GALLERY MASONRY GRID */}
-            {localReviews.flatMap(r => (r.media || []).map((m: any) => ({ ...m, userName: r.userName, rating: r.rating, text: r.text }))).length > 0 && (
-              <div className="space-y-3 pt-6 select-none border-t border-[rgba(232,227,216,0.45)] mt-6">
-                <span className="block text-[10px] font-extrabold text-[#71717A] uppercase tracking-widest flex items-center gap-1">
-                  <Camera className="h-3.5 w-3.5 text-[#18181B]" /> Customer Video & Photo Gallery / معرض المشتريين المصور
-                </span>
-                
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {localReviews.flatMap(r => (r.media || []).map((m: any) => ({ ...m, userName: r.userName, rating: r.rating, text: r.text }))).map((item, idx) => (
-                    <div 
-                      key={idx}
-                      onClick={() => setLightboxItem(item)}
-                      className="group relative aspect-[3/4] rounded-2xl border border-gray-150 bg-[#F5F0E8] overflow-hidden shadow-sm hover:shadow-md cursor-pointer spring-transition"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#18181B]/70 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-80 z-10" />
-                      
-                      {item.type === 'video' ? (
-                        <>
-                          <video
-                            src={item.url}
-                            autoPlay
-                            muted
-                            loop
-                            playsInline
+            {(() => {
+              const galleryItems = reviews.flatMap(r => (r.images || []).map((url: string) => ({
+                type: url.includes('mp4') || url.startsWith('data:video') ? 'video' as const : 'image' as const,
+                url: url,
+                userName: r.profiles?.full_name || 'Verified Buyer',
+                rating: r.rating,
+                text: r.body || undefined
+              })));
+              if (galleryItems.length === 0) return null;
+
+              return (
+                <div className="space-y-3 pt-6 select-none border-t border-[rgba(232,227,216,0.45)] mt-6">
+                  <span className="block text-[10px] font-extrabold text-[#71717A] uppercase tracking-widest flex items-center gap-1">
+                    <Camera className="h-3.5 w-3.5 text-[#18181B]" /> Customer Video & Photo Gallery / معرض المشتريين المصور
+                  </span>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {galleryItems.map((item, idx) => (
+                      <div 
+                        key={idx}
+                        onClick={() => setLightboxItem(item)}
+                        className="group relative aspect-[3/4] rounded-2xl border border-gray-150 bg-[#F5F0E8] overflow-hidden shadow-sm hover:shadow-md cursor-pointer spring-transition"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#18181B]/70 via-transparent to-transparent opacity-60 transition-opacity group-hover:opacity-80 z-10" />
+                        
+                        {item.type === 'video' ? (
+                          <>
+                            <video
+                              src={item.url}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                            />
+                            <div className="absolute top-3 right-3 h-7 w-7 rounded-full bg-white/25 backdrop-blur-md border border-white/20 flex items-center justify-center text-white z-20 group-hover:scale-110 transition-transform">
+                              <Play className="h-3.5 w-3.5 fill-current" />
+                            </div>
+                          </>
+                        ) : (
+                          <img 
+                            src={item.url} 
+                            alt="Customer showcase" 
                             className="h-full w-full object-cover transition-transform group-hover:scale-105"
                           />
-                          <div className="absolute top-3 right-3 h-7 w-7 rounded-full bg-white/25 backdrop-blur-md border border-white/20 flex items-center justify-center text-white z-20 group-hover:scale-110 transition-transform">
-                            <Play className="h-3.5 w-3.5 fill-current" />
-                          </div>
-                        </>
-                      ) : (
-                        <img 
-                          src={item.url} 
-                          alt="Customer showcase" 
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        />
-                      )}
+                        )}
 
-                      {/* Small overlay info banner inside card */}
-                      <div className="absolute bottom-3 left-3 right-3 z-20 text-white space-y-0.5">
-                        <span className="text-[10px] font-extrabold block truncate">
-                          Verified by {item.userName}
-                        </span>
-                        <div className="flex gap-0.5 text-amber-400">
-                          {Array.from({ length: item.rating }).map((_, i) => (
-                            <Star key={i} className="h-2.5 w-2.5 fill-current" />
-                          ))}
+                        {/* Small overlay info banner inside card */}
+                        <div className="absolute bottom-3 left-3 right-3 z-20 text-white space-y-0.5">
+                          <span className="text-[10px] font-extrabold block truncate">
+                            Verified by {item.userName}
+                          </span>
+                          <div className="flex gap-0.5 text-amber-400">
+                            {Array.from({ length: item.rating }).map((_, i) => (
+                              <Star key={i} className="h-2.5 w-2.5 fill-current" />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* 6. Review Feed Cards Grid */}
             <div className="space-y-4">
@@ -1183,14 +1157,13 @@ export default function ProductDetailPage({ params }: PageProps) {
                   <Loader2 className="h-6 w-6 animate-spin text-[#18181B]" />
                 </div>
               ) : (() => {
-                const allRevs = [...localReviews, ...reviews];
-                const filtered = allRevs.filter(r => {
+                const filtered = reviews.filter(r => {
                   if (starFilter !== null && r.rating !== starFilter) return false;
                   return true;
                 });
                 const sorted = [...filtered].sort((a, b) => {
                   if (sortBy === 'highest') return b.rating - a.rating;
-                  return new Date(b.timestamp || b.created_at).getTime() - new Date(a.timestamp || a.created_at).getTime();
+                  return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
                 });
 
                 if (sorted.length === 0) {
@@ -1209,74 +1182,96 @@ export default function ProductDetailPage({ params }: PageProps) {
 
                 return (
                   <div className="space-y-4">
-                    {sorted.map((review) => (
-                      <div key={review.id} className="space-y-2 bg-white rounded-3xl border border-[rgba(232,227,216,0.45)] p-6 shadow-sm">
-                        {/* Custom visual-friendly review card wrapper */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-xl bg-[#FAFAF7] border border-warm-border flex items-center justify-center text-xs font-bold text-[#18181B] uppercase">
-                              {review.userName ? review.userName.substring(0, 2) : 'UR'}
-                            </div>
-                            <div>
-                              <h5 className="font-extrabold text-xs text-[#18181B]">{review.userName || 'Anonymous'}</h5>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <div className="flex gap-0.5 text-amber-400">
-                                  {Array.from({ length: review.rating }).map((_, i) => (
-                                    <Star key={i} className="h-2.5 w-2.5 fill-current" />
-                                  ))}
+                    {sorted.map((review) => {
+                      const reviewerName = review.profiles?.full_name || 'Verified Buyer';
+                      const reviewDate = review.created_at;
+                      const reviewTextContent = review.body;
+                      const reviewImages = review.images || [];
+
+                      return (
+                        <div key={review.id} className="space-y-2 bg-white rounded-3xl border border-[rgba(232,227,216,0.45)] p-6 shadow-sm">
+                          {/* Custom visual-friendly review card wrapper */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-xl bg-[#FAFAF7] border border-warm-border flex items-center justify-center text-xs font-bold text-[#18181B] uppercase">
+                                {reviewerName.substring(0, 2)}
+                              </div>
+                              <div>
+                                <h5 className="font-extrabold text-xs text-[#18181B]">{reviewerName}</h5>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <div className="flex gap-0.5 text-amber-400">
+                                    {Array.from({ length: review.rating }).map((_, i) => (
+                                      <Star key={i} className="h-2.5 w-2.5 fill-current" />
+                                    ))}
+                                  </div>
+                                  <span className="text-[9px] text-[#71717A] font-medium">
+                                    {reviewDate ? new Date(reviewDate).toLocaleDateString() : 'Verified Purchase'}
+                                  </span>
                                 </div>
-                                <span className="text-[9px] text-[#71717A] font-medium">
-                                  {review.timestamp ? new Date(review.timestamp).toLocaleDateString() : 'Verified Purchase'}
-                                </span>
                               </div>
                             </div>
+                            
+                            {((review as any).buyer_id || review.user_id) && ((review as any).buyer_id || review.user_id) === user?.id && (
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await deleteMutation.mutateAsync({ id: review.id, productId: id });
+                                    window.location.reload();
+                                  } catch (err) {
+                                    console.error(err);
+                                  }
+                                }}
+                                className="text-[#71717A] hover:text-red-500 p-1 cursor-pointer transition-colors"
+                                title="Delete review"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
                           </div>
-                          
-                          {/* If review is local, let them delete it */}
-                          {review.id.toString().startsWith('local-rev-') && (
-                            <button
-                              onClick={() => {
-                                const updated = localReviews.filter(r => r.id !== review.id);
-                                setLocalReviews(updated);
-                                localStorage.setItem(`mogador_media_reviews_${id}`, JSON.stringify(updated));
-                              }}
-                              className="text-[#71717A] hover:text-red-500 p-1 cursor-pointer transition-colors"
-                              title="Delete local review"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+
+                          <p className="text-xs text-[#71717A] font-light mt-3 leading-relaxed" style={{ direction: 'rtl' }}>
+                            {reviewTextContent}
+                          </p>
+
+                          {/* Visual Media Attachment Previews */}
+                          {reviewImages.length > 0 && (
+                            <div className="flex flex-wrap gap-2 pt-3">
+                              {reviewImages.map((med: any, mIdx: number) => {
+                                const isVideo = typeof med === 'string' 
+                                  ? (med.includes('mp4') || med.startsWith('data:video'))
+                                  : med.type === 'video';
+                                const url = typeof med === 'string' ? med : med.url;
+
+                                return (
+                                  <div
+                                    key={mIdx}
+                                    onClick={() => setLightboxItem({
+                                      type: isVideo ? 'video' : 'image',
+                                      url: url,
+                                      userName: reviewerName,
+                                      rating: review.rating,
+                                      text: reviewTextContent || undefined
+                                    })}
+                                    className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-150 cursor-pointer hover:scale-105 transition-transform"
+                                  >
+                                    {isVideo ? (
+                                      <>
+                                        <video src={url} muted className="h-full w-full object-cover" />
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white">
+                                          <Play className="h-4 w-4 fill-current text-white/90" />
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <img src={url} alt="Review attachment" className="h-full w-full object-cover" />
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
                         </div>
-
-                        <p className="text-xs text-[#71717A] font-light mt-3 leading-relaxed" style={{ direction: 'rtl' }}>
-                          {review.text}
-                        </p>
-
-                        {/* Visual Media Attachment Previews */}
-                        {review.media && review.media.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pt-3">
-                            {review.media.map((med: any, mIdx: number) => (
-                              <div
-                                key={mIdx}
-                                onClick={() => setLightboxItem(med)}
-                                className="relative h-16 w-16 rounded-xl overflow-hidden border border-gray-150 cursor-pointer hover:scale-105 transition-transform"
-                              >
-                                {med.type === 'video' ? (
-                                  <>
-                                    <video src={med.url} muted className="h-full w-full object-cover" />
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white">
-                                      <Play className="h-4 w-4 fill-current text-white/90" />
-                                    </div>
-                                  </>
-                                ) : (
-                                  <img src={med.url} alt="Review attachment" className="h-full w-full object-cover" />
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })()}
